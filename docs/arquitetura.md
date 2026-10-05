@@ -2,7 +2,7 @@
 
 A interface de uso será o **terminal**. A proposta tem um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker.
 
-O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Esta versão em Mermaid acrescenta os componentes necessários à demonstração. O [CSV diário de BTC-USD](../data/README.md) já foi coletado; treinamento, modelo exportado e serviço de inferência permanecem como proposta.
+O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Os [CSVs diários de BTC-USD](../data/README.md) foram coletados, o [notebook de comparação](../training/comparacao.ipynb) foi executado e os modelos JSON foram exportados. O serviço de inferência em Docker e suas chamadas HTTP permanecem como proposta.
 
 ## Arquitetura em Mermaid
 
@@ -63,9 +63,11 @@ flowchart LR
 
 O notebook prepara `ds` (data) e `y` (preço), separa treino e teste em ordem cronológica e ajusta Prophet no treino. Para avaliar, prevê apenas nas datas do teste e compara `yhat` com o preço observado. O caso básico usará somente data e preço.
 
+A [comparação executada](../reports/comparacao.md) acrescenta uma validação cronológica anterior ao teste final para escolher entre as janelas de três e 12 anos. O [protocolo](../training/protocolo.md) registra cortes, parâmetros e critério de escolha. O pipeline acima é a visão resumida; os mesmos componentes atendem às duas janelas.
+
 ## Como o modelo chega ao backend
 
-O notebook grava `models/modelo.json` com `prophet.serialize.model_to_json`. A pasta `models/` será montada no container com acesso somente leitura. O backend carrega esse arquivo ao iniciar com `model_from_json`, seguindo a [serialização oficial](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
+O notebook já gravou `models/modelo.json` com `prophet.serialize.model_to_json`. A pasta `models/` será montada no container com acesso somente leitura. O backend carregará esse arquivo ao iniciar com `model_from_json`, seguindo a [serialização oficial](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models). A recarga dos modelos já foi verificada no experimento local.
 
 O terminal fará as chamadas HTTP, usando `curl` ou `Invoke-RestMethod` no PowerShell:
 
@@ -125,7 +127,7 @@ Este fluxo representa o caminho com artefato válido. Se o arquivo estiver ausen
 
 O aceite da implementação será: notebook executado, modelo exportado e carregado no container, verificação do serviço e uma predição solicitada pelo terminal. Registrar os comandos, a resposta e limitações no devlog. Verificar também o comportamento de entrada inválida e modelo ausente.
 
-Prophet foi adotado na proposta após a recomendação do professor relatada pelo autor. O recorte atual usa três anos de BTC-USD diário do Yahoo Finance. Horizonte de previsão, configuração e métrica permanecem abertos. A divisão inicial usa apenas treino e teste. Comparar vários modelos ou janelas de histórico é uma extensão opcional.
+Prophet foi adotado após a recomendação do professor relatada pelo autor. A comparação das janelas já foi executada, e três anos foram escolhidos pelo menor MAE da validação. O teste reservado usou previsões de 90 dias a partir de um corte fixo. O horizonte aceito pela futura API permanece aberto; configuração e métricas do experimento estão registradas no protocolo.
 
 Referência técnica: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html).
 

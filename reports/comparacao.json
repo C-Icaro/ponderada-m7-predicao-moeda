@@ -1,0 +1,155 @@
+{
+  "created_at_utc": "2026-10-05T18:21:51.767199+00:00",
+  "protocol": {
+    "parameters": {
+      "growth": "linear",
+      "yearly_seasonality": true,
+      "weekly_seasonality": true,
+      "daily_seasonality": false,
+      "n_changepoints": 25,
+      "changepoint_range": 0.8,
+      "changepoint_prior_scale": 0.05,
+      "seasonality_mode": "additive",
+      "seasonality_prior_scale": 10.0,
+      "mcmc_samples": 0,
+      "uncertainty_samples": 0
+    },
+    "fit_seed": 42,
+    "selection_metric": "validation MAE",
+    "forecast_mode": "90 days from a fixed cutoff"
+  },
+  "datasets": {
+    "3y": {
+      "csv_path": "data/processed/btc_usd_daily.csv",
+      "metadata_path": "data/coleta-btc-usd.json",
+      "sha256": "efcfb47437769e79c12171752abf717ac84af17535d98ebfef82f066f278e4f6",
+      "bytes": 26968,
+      "rows": 1096,
+      "first_date": "2023-10-05",
+      "last_date": "2026-10-04"
+    },
+    "12y": {
+      "csv_path": "data/processed/btc_usd_daily_12y.csv",
+      "metadata_path": "data/coleta-btc-usd-12y.json",
+      "sha256": "1ee1459f8acf0d4a9ffc2aba779a0f856783f9a64ecb9d330845ecb4a21902ee",
+      "bytes": 116370,
+      "rows": 4401,
+      "first_date": "2014-09-17",
+      "last_date": "2026-10-04"
+    }
+  },
+  "validation": {
+    "start": "2026-04-08",
+    "end": "2026-07-06",
+    "rows": 90,
+    "horizon_days": 90,
+    "baseline": {
+      "mae_usd": 6613.447916666667,
+      "rmse_usd": 7352.578852907894,
+      "smape_percent": 9.382315280034316,
+      "last_known_date": "2026-04-07"
+    },
+    "models": {
+      "3y": {
+        "mae_usd": 16901.325794993656,
+        "rmse_usd": 17431.59331457119,
+        "smape_percent": 27.116783562619553,
+        "train_rows": 916,
+        "train_start": "2023-10-05",
+        "train_end": "2026-04-07",
+        "fit_seconds": 1.414450800002669
+      },
+      "12y": {
+        "mae_usd": 43627.856776367706,
+        "rmse_usd": 44295.69022525448,
+        "smape_percent": 47.24119791293125,
+        "train_rows": 4221,
+        "train_start": "2014-09-17",
+        "train_end": "2026-04-07",
+        "fit_seconds": 0.8948569999920437
+      }
+    }
+  },
+  "selection": {
+    "criterion": "Menor MAE na validação; empate exato favorece 3y",
+    "selected_window": "3y",
+    "selected_at_utc": "2026-10-05T18:21:49.883171+00:00",
+    "validation_mae_usd": {
+      "3y": 16901.325794993656,
+      "12y": 43627.856776367706
+    }
+  },
+  "test": {
+    "start": "2026-07-07",
+    "end": "2026-10-04",
+    "rows": 90,
+    "horizon_days": 90,
+    "baseline": {
+      "mae_usd": 8707.09279513889,
+      "rmse_usd": 11875.248059939502,
+      "smape_percent": 12.094752186817509,
+      "last_known_date": "2026-07-06"
+    },
+    "models": {
+      "3y": {
+        "mae_usd": 16347.51000205857,
+        "rmse_usd": 21582.530129568426,
+        "smape_percent": 25.060250959108604,
+        "train_rows": 1006,
+        "train_start": "2023-10-05",
+        "train_end": "2026-07-06",
+        "fit_seconds": 0.32038099999772385,
+        "artifact": {
+          "path": "models/modelo-3y.json",
+          "bytes": 166117,
+          "sha256": "ba08218862f6bbd72e5c7cd57adc49a8aa9fb82b0cc300a3df9fb14fc09b4c4e",
+          "reload_max_abs_difference": 0.0
+        }
+      },
+      "12y": {
+        "mae_usd": 28836.89462775602,
+        "rmse_usd": 29900.361684804975,
+        "smape_percent": 33.77190427545572,
+        "train_rows": 4311,
+        "train_start": "2014-09-17",
+        "train_end": "2026-07-06",
+        "fit_seconds": 0.7974498999974458,
+        "artifact": {
+          "path": "models/modelo-12y.json",
+          "bytes": 703566,
+          "sha256": "f1741f72c591c01a4ef3bcd78e99d64d73ec9ce78f94e1dc00cb2a340caf381f",
+          "reload_max_abs_difference": 0.0
+        }
+      }
+    }
+  },
+  "deployment": {
+    "selected_window": "3y",
+    "train_rows": 1096,
+    "train_start": "2023-10-05",
+    "train_end": "2026-10-04",
+    "fit_seconds": 0.3845263999974122,
+    "independently_evaluated": false,
+    "artifact": {
+      "path": "models/modelo.json",
+      "bytes": 180508,
+      "sha256": "8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1",
+      "reload_max_abs_difference": 0.0
+    }
+  },
+  "environment": {
+    "python": "3.13.13",
+    "platform": "Windows",
+    "versions": {
+      "prophet": "1.5.0",
+      "cmdstanpy": "1.3.0",
+      "holidays": "0.105",
+      "stanio": "0.5.1",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "matplotlib": "3.11.1"
+    },
+    "disk_free_bytes_before_training": 2924904448,
+    "disk_free_bytes_after_training": 2923364352
+  }
+}

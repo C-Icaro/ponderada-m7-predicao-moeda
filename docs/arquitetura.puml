@@ -37,7 +37,7 @@ note bottom of ModelsVolume
 end note
 
 note bottom of Client
-  Interfaces e componentes ainda não implementados.
-  Moeda, dados e horizonte permanecem abertos.
+  Backend e interfaces HTTP ainda não implementados.
+  Dados BTC-USD e modelos exportados; horizonte da API aberto.
 end note
 @enduml

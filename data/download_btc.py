@@ -18,6 +18,10 @@ def main():
     parser.add_argument("--start", type=date.fromisoformat, default=date(2023, 10, 5))
     parser.add_argument("--end", type=date.fromisoformat, default=date(2026, 10, 5),
                         help="Data final exclusiva; não inclui o dia em andamento.")
+    parser.add_argument("--output", type=Path,
+                        help="Caminho do CSV; padrão: data/processed/btc_usd_daily.csv.")
+    parser.add_argument("--metadata", type=Path,
+                        help="Caminho da procedência; padrão: data/coleta-btc-usd.json.")
     args = parser.parse_args()
     if not args.start < args.end <= datetime.now(timezone.utc).date():
         parser.error("Use início < fim <= data de hoje em UTC.")
@@ -66,7 +70,14 @@ def main():
     writer.writerows((day.isoformat(), close) for day, close in rows)
     csv_bytes = content.getvalue().encode("utf-8")
     root = Path(__file__).resolve().parent
-    output = root / "processed" / "btc_usd_daily.csv"
+    output = (args.output or root / "processed" / "btc_usd_daily.csv").resolve()
+    metadata = (args.metadata or root / "coleta-btc-usd.json").resolve()
+    if output == metadata:
+        raise ValueError("CSV e metadados precisam ter caminhos diferentes.")
+    try:
+        csv_path = output.relative_to(root.parent).as_posix()
+    except ValueError:
+        csv_path = output.as_posix()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(csv_bytes)
 
@@ -78,7 +89,7 @@ def main():
         "first_date": rows[0][0].isoformat(), "last_date": rows[-1][0].isoformat(),
         "rows": len(rows), "response_rows": len(timestamps), "response_bytes": len(body),
         "excluded_outside_period": len(timestamps) - len(rows),
-        "csv_path": "data/processed/btc_usd_daily.csv", "csv_bytes": len(csv_bytes),
+        "csv_path": csv_path, "csv_bytes": len(csv_bytes),
         "csv_sha256": hashlib.sha256(csv_bytes).hexdigest(),
         "columns": {"ds": "Data diária da fonte UTC, YYYY-MM-DD, sem timezone",
                     "y": "Close não ajustado, USD por BTC"},
@@ -86,11 +97,13 @@ def main():
                        "missing_dates": 0, "invalid_closes": 0},
         "redistribution": "CSV local ignorado pelo Git; repositório contém obtenção e procedência.",
     }
-    (root / "coleta-btc-usd.json").write_text(
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    metadata.write_text(
         json.dumps(provenance, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Salvo: {output}")
     print(f"{len(rows)} linhas | {rows[0][0]} a {rows[-1][0]} | {len(csv_bytes)} bytes")
     print(f"Excluídas fora do período: {len(timestamps) - len(rows)}")
+    print(f"Procedência: {metadata}")
 
 
 if __name__ == "__main__":

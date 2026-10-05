@@ -1,0 +1,33 @@
+{
+  "source": "Yahoo Finance",
+  "history_page": "https://finance.yahoo.com/quote/BTC-USD/history/",
+  "request_url": "https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?period1=1410912000&period2=1791158400&interval=1d",
+  "method": "Python standard library / Yahoo chart endpoint",
+  "retrieved_at_utc": "2026-10-05T18:17:13.338849+00:00",
+  "symbol": "BTC-USD",
+  "currency": "USD",
+  "exchangeTimezoneName": "UTC",
+  "dataGranularity": "1d",
+  "start_inclusive": "2014-09-17",
+  "end_exclusive": "2026-10-05",
+  "first_date": "2014-09-17",
+  "last_date": "2026-10-04",
+  "rows": 4401,
+  "response_rows": 4402,
+  "response_bytes": 438528,
+  "excluded_outside_period": 1,
+  "csv_path": "data/processed/btc_usd_daily_12y.csv",
+  "csv_bytes": 116370,
+  "csv_sha256": "1ee1459f8acf0d4a9ffc2aba779a0f856783f9a64ecb9d330845ecb4a21902ee",
+  "columns": {
+    "ds": "Data diária da fonte UTC, YYYY-MM-DD, sem timezone",
+    "y": "Close não ajustado, USD por BTC"
+  },
+  "validation": {
+    "complete_daily_range": true,
+    "duplicate_dates": 0,
+    "missing_dates": 0,
+    "invalid_closes": 0
+  },
+  "redistribution": "CSV local ignorado pelo Git; repositório contém obtenção e procedência."
+}
