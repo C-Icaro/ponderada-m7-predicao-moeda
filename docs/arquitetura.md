@@ -1,39 +1,54 @@
 # Arquitetura simples
 
-A interface de uso é o **terminal**. A solução usa um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker. A porta é `6767` e a rede Docker tem nome `PonderadaComp`.
+A interface de uso é o **terminal**. A solução usa dois CSVs diários, notebooks offline para comparar Prophet e ARIMA, um modelo Prophet exportado em JSON e um backend Python em um único container Docker. A porta é `6767` e a rede Docker tem nome `PonderadaComp`.
 
-O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Os [CSVs diários de BTC-USD](../data/README.md) foram coletados, o [notebook de comparação](../training/comparacao.ipynb) foi executado e os modelos JSON foram exportados. O [backend](../backend/README.md) carrega Prophet uma vez; o [cliente terminal](../client/README.md) consulta saúde e previsão por HTTP.
+O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. A arquitetura V2 distingue o treinamento e a avaliação offline da inferência no container. Os [CSVs diários de BTC-USD](../data/README.md) foram coletados, o [notebook de comparação](../training/comparacao.ipynb) foi executado e os modelos JSON foram exportados. O [backend](../backend/README.md) carrega Prophet uma vez; o [cliente terminal](../client/README.md) consulta saúde e previsão por HTTP.
 
 ## Arquitetura em Mermaid
 
 Fonte editável: [arquitetura.mmd](arquitetura.mmd).
 
-[Exportação SVG](imagens/arquitetura-mermaid.svg) · [Captura do navegador](imagens/arquitetura-mermaid-editor.jpg).
+[Exportação SVG V2](imagens/arquitetura-v2.svg) · [Captura do navegador](imagens/arquitetura-v2-editor.jpg).
 
 ```mermaid
 flowchart LR
-    CSV[("CSV histórico<br/>ds: data / y: preço")]
-    Treino["Notebook Python + Prophet<br/>Treinar e avaliar"]
-    Modelo["Artefato exportado<br/>models/modelo.json"]
+    subgraph Offline["Offline: treinamento e comparação"]
+        CSV[("CSVs BTC-USD: 3 e 12 anos<br/>ds: data UTC / y: fechamento USD")]
+        Prophet["Notebook Prophet<br/>Validação e teste cronológicos"]
+        ARIMA["Notebook ARIMA<br/>Validação/teste exploratórios"]
+        Reports["reports/: métricas e gráficos"]
+        ModeloARIMA["models/arima.json<br/>Experimento ARIMA offline"]
 
-    subgraph Docker["Container Docker"]
-        API["Backend Python + Prophet<br/>Carregar JSON e prever por data"]
+        CSV --> Prophet
+        CSV --> ARIMA
+        Prophet --> Reports
+        ARIMA --> Reports
+        ARIMA --> ModeloARIMA
     end
 
-    Terminal["Terminal<br/>curl ou Invoke-RestMethod"]
+    Modelo["models/modelo.json<br/>Prophet, janela de 3 anos<br/>Ajuste final até 04/10/2026"]
+    Volume["models/ no host<br/>Volume somente leitura"]
 
-    CSV -->|Lê os dados| Treino
-    Treino -->|model_to_json| Modelo
-    Modelo -->|Volume somente leitura| API
-    Terminal -->|"GET /health ou POST /predict com ds"| API
-    API -->|"Status ou previsão yhat em JSON"| Terminal
+    subgraph Docker["Container Docker: rede PonderadaComp"]
+        API["API Python + Prophet :6767<br/>Carrega modelo.json uma vez<br/>Horizonte: 7 dias após o treino"]
+    end
+
+    Terminal["Terminal Windows<br/>client/terminal.py<br/>curl ou Invoke-RestMethod"]
+
+    Prophet -->|"Ajuste final e model_to_json"| Modelo
+    Modelo --> Volume
+    Volume -->|"/app/models:ro e model_from_json"| API
+    Terminal -->|"HTTP: GET /health ou POST /predict com ds"| API
+    API -->|"JSON: saúde ou ds/yhat em USD"| Terminal
 
     classDef treino fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef modelo fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef offline fill:#f3f4f6,stroke:#6b7280,color:#374151
     classDef servico fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
     classDef cliente fill:#fef3c7,stroke:#d97706,color:#78350f
-    class Treino treino
-    class Modelo modelo
+    class Prophet,ARIMA treino
+    class Modelo,Volume modelo
+    class Reports,ModeloARIMA offline
     class API servico
     class Terminal cliente
 ```
@@ -82,43 +97,56 @@ O terminal faz as chamadas HTTP usando `python client/terminal.py`, `curl` ou `I
 
 Fonte editável: [sequencia.mmd](sequencia.mmd).
 
-[Exportação SVG](imagens/sequencia-mermaid.svg) · [Captura do navegador](imagens/sequencia-mermaid-editor.jpg).
+[Exportação SVG V2](imagens/sequencia-v2.svg) · [Captura do navegador](imagens/sequencia-v2-editor.jpg). A fonte Mermaid abaixo reflete o contrato e as respostas verificados no container.
 
-O diagrama mostra a ordem das interações na solução. O notebook treina e exporta o modelo; o backend carrega uma instância Prophet em memória ao iniciar; o terminal consulta o serviço por HTTP. O arquivo JSON é o artefato persistido, e `predict` é executado pela instância carregada no backend.
+O diagrama mostra a ordem das interações na solução. O notebook Prophet compara as janelas, avalia os modelos e reajusta a janela selecionada até 04/10/2026 antes da exportação. O experimento ARIMA posterior registra métricas e artefato separados, enquanto o backend continua carregando Prophet. O backend carrega uma instância Prophet em memória e verifica uma previsão antes de abrir a porta. O terminal no Windows consulta `127.0.0.1:6767`; o container participa da rede `PonderadaComp` e lê o JSON pelo volume somente leitura. A [evidência de integração](../reports/integracao.json) registra HTTP 200 e `yhat=78248.948192546` para 05/10/2026.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Terminal as Terminal (curl / PowerShell)
+    actor Terminal as Terminal Windows
     participant CSV as CSV de BTC-USD
-    participant Treino as Notebook com Prophet
+    participant Treino as Notebooks offline
     participant Arquivo as models/modelo.json
-    participant API as Backend Python em Docker
+    participant API as Backend Docker :6767
+    participant Modelo as Prophet em memória
 
     Note over CSV,Arquivo: 1. Treinamento offline
     Treino->>CSV: Ler ds (data) e y (fechamento)
     CSV-->>Treino: Histórico diário
-    Treino->>Treino: Separar treino e teste cronologicamente
-    Treino->>Treino: fit(treino)
-    Treino->>Treino: predict(datas do teste) e avaliar
+    Treino->>Treino: Comparar Prophet: 3 e aproximadamente 12 anos
+    Treino->>Treino: Escolher janela pela validação e avaliar no teste
+    Treino->>Treino: Reajustar Prophet de 3 anos até 04/10/2026
     Treino->>Arquivo: Gravar model_to_json(modelo)
+    Treino->>Treino: Comparar ARIMA depois, experimento exploratório
+    Note right of Treino: Métricas em reports/<br/>ARIMA exportado separadamente em models/arima.json
 
     Note over Arquivo,API: 2. Inicialização do backend
-    API->>Arquivo: Ler JSON pelo volume somente leitura
+    Note right of API: Rede Docker PonderadaComp<br/>127.0.0.1:6767 encaminha para container:6767
+    API->>Arquivo: Ler /app/models/modelo.json pelo volume somente leitura
     Arquivo-->>API: Conteúdo do artefato
-    API->>API: model_from_json, carregar modelo em memória
+    API->>Modelo: model_from_json(conteúdo), uma vez
+    Modelo-->>API: Instância Prophet carregada
+    API->>Modelo: predict(primeiro dia permitido), verificar prontidão
+    Modelo-->>API: Previsão finita
+    API->>API: Abrir HTTP em 0.0.0.0:6767
+    Note over Arquivo,API: Artefato ausente ou inválido interrompe a inicialização (saída 1)
 
-    Note over Terminal,API: 3. Consulta pelo terminal
+    Note over Terminal,API: 3. Consultas em http://127.0.0.1:6767
     Terminal->>API: GET /health
-    API-->>Terminal: 200 OK, serviço pronto e modelo carregado
+    API-->>Terminal: 200 OK: modelo pronto, intervalo permitido e hash
+    Note over Terminal,API: Datas aceitas pelo artefato atual: 2026-10-05 a 2026-10-11
+    Terminal->>Terminal: Usar data informada ou forecast_start de /health
     Terminal->>API: POST /predict {"ds":"2026-10-05"}
-    API->>API: Validar formato de ds e horizonte aceito
+    API->>API: Validar JSON, campo ds, calendário e horizonte de 7 dias
     alt Entrada válida
-        API->>API: modelo.predict(DataFrame com ds)
-        API-->>Terminal: 200 OK, JSON com ds e yhat
+        API->>Modelo: predict(DataFrame com ds)
+        Modelo-->>API: yhat=78248.948192546 para 2026-10-05
+        API-->>Terminal: 200 OK: ds, yhat, symbol, currency, model, trained_until e hash
     else Entrada inválida
-        API-->>Terminal: 4xx, JSON com erro de validação
+        API-->>Terminal: 422: error.code=invalid_input e mensagem
     end
+    Note over Terminal,API: JSON malformado: 400<br/>Content-Type incorreto: 415<br/>Corpo acima de 4096 bytes: 413
 ```
 
 Este fluxo representa o caminho com artefato válido. Arquivo ausente ou inválido interrompe a inicialização; `GET /health` só indica prontidão após o carregamento e uma previsão inicial válida. O horizonte de uso é sete dias. As previsões de 90 dias usadas na avaliação são um experimento separado desse limite operacional.
