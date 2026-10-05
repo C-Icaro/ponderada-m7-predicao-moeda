@@ -1,6 +1,6 @@
 # Arquitetura simples
 
-A interface de uso será o **terminal**. A proposta tem um CSV pequeno, um notebook de treinamento, um modelo exportado e um backend Python em um único container Docker.
+A interface de uso será o **terminal**. A proposta tem um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker.
 
 O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Esta versão em Mermaid acrescenta os componentes necessários à demonstração. Tudo abaixo é uma proposta; os componentes ainda não foram implementados.
 
@@ -12,21 +12,21 @@ Fonte editável: [arquitetura.mmd](arquitetura.mmd).
 
 ```mermaid
 flowchart LR
-    CSV[("CSV histórico<br/>Data e fechamento")]
-    Treino["Notebook Python<br/>Treinar e avaliar um modelo simples"]
-    Modelo["Artefato exportado<br/>models/modelo.joblib"]
+    CSV[("CSV histórico<br/>ds: data / y: preço")]
+    Treino["Notebook Python + Prophet<br/>Treinar e avaliar"]
+    Modelo["Artefato exportado<br/>models/modelo.json"]
 
     subgraph Docker["Container Docker"]
-        API["Backend Python<br/>Carregar modelo e fazer predições"]
+        API["Backend Python + Prophet<br/>Carregar JSON e prever por data"]
     end
 
     Terminal["Terminal<br/>curl ou Invoke-RestMethod"]
 
     CSV -->|Lê os dados| Treino
-    Treino -->|Exporta| Modelo
+    Treino -->|model_to_json| Modelo
     Modelo -->|Volume somente leitura| API
-    Terminal -->|"GET /health ou POST /predict"| API
-    API -->|"Status ou predição em JSON"| Terminal
+    Terminal -->|"GET /health ou POST /predict com ds"| API
+    API -->|"Status ou previsão yhat em JSON"| Terminal
 
     classDef treino fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef modelo fill:#dcfce7,stroke:#16a34a,color:#14532d
@@ -47,25 +47,25 @@ Fonte editável: [pipeline.mmd](pipeline.mmd).
 ```mermaid
 flowchart LR
     Dados["Receber o CSV"] --> Preparacao["Explorar e limpar<br/>Ordenar por data"]
-    Preparacao --> Features["Definir entradas<br/>Sem usar dados futuros"]
-    Features --> Divisao["Separar treino e teste<br/>Em ordem cronológica"]
-    Divisao --> Treino["Treinar um modelo simples"]
-    Treino --> Avaliacao["Avaliar no teste reservado"]
-    Avaliacao --> Exportacao["Exportar modelo.joblib<br/>Com transformações, se usadas"]
+    Preparacao --> Colunas["Preparar ds e y<br/>Data e preço numérico"]
+    Colunas --> Divisao["Separar treino e teste<br/>Em ordem cronológica"]
+    Divisao --> Treino["Ajustar Prophet<br/>fit no treino"]
+    Treino --> Avaliacao["Prever nas datas do teste<br/>Comparar yhat com y"]
+    Avaliacao --> Exportacao["Exportar modelo.json<br/>model_to_json"]
 
     classDef processo fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef cuidado fill:#fef3c7,stroke:#d97706,color:#78350f
     classDef saida fill:#dcfce7,stroke:#16a34a,color:#14532d
-    class Dados,Preparacao,Features,Treino processo
+    class Dados,Preparacao,Colunas,Treino processo
     class Divisao,Avaliacao cuidado
     class Exportacao saida
 ```
 
-O notebook lê o CSV, separa treino e teste em ordem cronológica, treina um modelo e registra a avaliação. Se houver transformações com parâmetros aprendidos, elas serão ajustadas no treino e exportadas junto do modelo. As entradas só podem usar informações disponíveis no momento da previsão.
+O notebook prepara `ds` (data) e `y` (preço), separa treino e teste em ordem cronológica e ajusta Prophet no treino. Para avaliar, prevê apenas nas datas do teste e compara `yhat` com o preço observado. O caso básico usará somente data e preço.
 
 ## Como o modelo chega ao backend
 
-O notebook grava `models/modelo.joblib`. A pasta `models/` será montada no container com acesso somente leitura. O backend carrega esse arquivo ao iniciar. O formato Joblib é a proposta inicial e depende da biblioteca de modelagem escolhida.
+O notebook grava `models/modelo.json` com `prophet.serialize.model_to_json`. A pasta `models/` será montada no container com acesso somente leitura. O backend carrega esse arquivo ao iniciar com `model_from_json`, seguindo a [serialização oficial](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
 
 O terminal fará as chamadas HTTP, usando `curl` ou `Invoke-RestMethod` no PowerShell:
 
@@ -74,12 +74,14 @@ O terminal fará as chamadas HTTP, usando `curl` ou `Invoke-RestMethod` no Power
 | `GET /health` | Serviço disponível e modelo carregado |
 | `POST /predict` | Entrada enviada ao backend e predição recebida em JSON |
 
-O corpo da requisição será definido após escolher as entradas do modelo. Os comandos reproduzíveis e as respostas reais serão registrados no devlog durante a implementação.
+O contrato proposto para `POST /predict` é receber a data `ds` e retornar `ds` e `yhat` em JSON. Validar o formato da data e o horizonte aceito. Os comandos reproduzíveis e as respostas reais serão registrados no devlog durante a implementação.
 
 ## Aceite e decisões pendentes
 
 O aceite da implementação será: notebook executado, modelo exportado e carregado no container, verificação do serviço e uma predição solicitada pelo terminal. Registrar os comandos, a resposta e limitações no devlog. Verificar também o comportamento de entrada inválida e modelo ausente.
 
-Moeda/par, fonte, período, frequência, horizonte de previsão e biblioteca de modelagem permanecem abertos. A divisão inicial usa apenas treino e teste. Comparar vários modelos é uma extensão opcional.
+Prophet foi adotado na proposta após a recomendação do professor relatada pelo autor. Moeda/par, fonte, período, frequência e horizonte de previsão permanecem abertos. A divisão inicial usa apenas treino e teste. Comparar vários modelos é uma extensão opcional.
+
+Referência técnica: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html).
 
 Referências: [enunciado](https://github.com/Murilo-ZC/Atividade-Ponderada-M7-2026-EC), [requisitos](requisitos.md) e [UML complementar em PlantUML](arquitetura.puml). O Mermaid é uma visão de fluxo entre componentes; a fonte PlantUML mantém a notação UML solicitada no enunciado.

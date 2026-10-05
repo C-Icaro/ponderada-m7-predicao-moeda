@@ -56,3 +56,11 @@ Revisar a arquitetura de componentes e definir um recorte pequeno de dados antes
 - Os dois diagramas Mermaid foram renderizados no Mermaid Live no navegador. Essa verificação confirma a sintaxe e a apresentação dos diagramas, não a execução da solução.
 - Exportações SVG e capturas do editor foram preservadas em `docs/imagens/`.
 - [Captura da arquitetura](docs/imagens/arquitetura-mermaid-editor.jpg) e [captura do pipeline](docs/imagens/pipeline-mermaid-editor.jpg).
+
+### Recomendação do professor: Prophet
+
+- O autor informou que o professor recomendou o [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html). A proposta foi ajustada para usar essa biblioteca com `ds` (data) e `y` (preço).
+- O artefato proposto mudou de Joblib para `models/modelo.json`, usando `model_to_json` e `model_from_json`, conforme a [documentação de serialização](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
+- O backend receberá a data `ds` e devolverá a previsão `yhat`. O terminal continua sendo a interface de uso.
+- A avaliação será feita apenas nas datas do teste reservado. O histórico incluído por padrão em `make_future_dataframe` não será tratado como resultado de teste.
+- Este checkpoint atualiza a documentação. Prophet ainda não foi instalado nem executado. A proposta anterior e suas capturas permanecem recuperáveis no [commit 2911e61](https://github.com/C-Icaro/ponderada-m7-predicao-moeda/commit/2911e61b310f7d18bfef6a49634dde743b5c7a42).

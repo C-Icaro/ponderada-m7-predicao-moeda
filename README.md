@@ -29,7 +29,9 @@ Construir uma demonstração que conecte dados históricos, treinamento, exporta
 
 ## Próxima decisão
 
-Definir moeda/par, fonte, frequência, período e horizonte previsto. A escolha ainda está aberta. A solução será simples: treinamento em notebook, backend Python em um container Docker e uso pelo terminal (`curl` ou `Invoke-RestMethod`). O desenvolvimento será registrado no devlog, com comandos e resultados efetivamente observados.
+Definir moeda/par, fonte, frequência, período e horizonte previsto. A proposta usa Prophet, recomendado pelo professor segundo o relato do autor: CSV com `ds` (data) e `y` (preço), treinamento em notebook, exportação para `models/modelo.json`, backend Python em um container Docker e uso pelo terminal (`curl` ou `Invoke-RestMethod`). O desenvolvimento será registrado no devlog, com comandos e resultados efetivamente observados.
+
+Referências técnicas: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html) e [serialização oficial em JSON](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
 
 ## Limitações
 

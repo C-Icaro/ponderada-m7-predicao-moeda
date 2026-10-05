@@ -4,22 +4,22 @@ left to right direction
 skinparam componentStyle uml2
 skinparam shadowing false
 
-artifact "CSV histórico pequeno" as Csv <<dados>>
-component "Treinamento de um modelo simples" as Training <<notebook>>
-artifact "modelo.joblib\nTransformações necessárias, se usadas" as Model <<artefato exportado>>
+artifact "CSV histórico pequeno\nds: data / y: preço" as Csv <<dados>>
+component "Treinamento com Prophet" as Training <<notebook>>
+artifact "modelo.json" as Model <<artefato exportado>>
 folder "models/ no host" as ModelsVolume <<volume somente leitura>>
 
 node "Container de inferência" as InferenceContainer <<Docker>> {
-  component "Backend de inferência" as Backend <<Python>>
+  component "Backend de inferência\nProphet" as Backend <<Python>>
 }
 
 interface "HTTP/JSON\nGET /health\nPOST /predict" as HttpApi
 component "Terminal\ncurl ou Invoke-RestMethod" as Client <<cliente HTTP>>
 
 Csv --> Training : interface CSV\nlê dados históricos
-Training --> Model : interface de exportação\nserializa modelo e transformações usadas
+Training --> Model : model_to_json\nserializa o modelo Prophet
 Model --> ModelsVolume : disponibiliza arquivo\nem models/
-ModelsVolume --> Backend : interface de arquivos\nmontagem /app/models:ro\ncarrega o artefato
+ModelsVolume --> Backend : montagem /app/models:ro\nmodel_from_json
 Backend -- HttpApi : fornece
 Client ..> HttpApi : usa\nrequisição e resposta JSON
 
@@ -27,17 +27,17 @@ note bottom of Training
   Pipeline proposto:
   CSV pequeno -> divisão cronológica treino/teste
   -> treinamento -> avaliação no teste -> exportação.
-  Transformações, se usadas, ajustadas somente no treino.
-  Um notebook e um modelo simples, sem embaralhar a série.
+  Colunas ds e y; um modelo Prophet.
+  Sem embaralhar a série.
 end note
 
 note bottom of ModelsVolume
   Proposta de transferência do modelo.
-  models/modelo.joblib no host; backend apenas lê.
+  models/modelo.json no host; backend apenas lê.
 end note
 
 note bottom of Client
   Interfaces e componentes ainda não implementados.
-  Moeda, dados, horizonte e modelo permanecem abertos.
+  Moeda, dados e horizonte permanecem abertos.
 end note
 @enduml
