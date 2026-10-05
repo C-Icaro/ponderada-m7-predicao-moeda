@@ -1,0 +1,9 @@
+{
+  "criterion": "Menor MAE na validação; empate exato favorece 3y",
+  "selected_window": "3y",
+  "selected_at_utc": "2026-10-05T18:21:49.883171+00:00",
+  "validation_mae_usd": {
+    "3y": 16901.325794993656,
+    "12y": 43627.856776367706
+  }
+}

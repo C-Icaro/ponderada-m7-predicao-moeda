@@ -1,0 +1,14 @@
+flowchart LR
+    Dados["Receber o CSV"] --> Preparacao["Explorar e limpar<br/>Ordenar por data"]
+    Preparacao --> Colunas["Preparar ds e y<br/>Data e preço numérico"]
+    Colunas --> Divisao["Separar treino e teste<br/>Em ordem cronológica"]
+    Divisao --> Treino["Ajustar Prophet<br/>fit no treino"]
+    Treino --> Avaliacao["Prever nas datas do teste<br/>Comparar yhat com y"]
+    Avaliacao --> Exportacao["Exportar modelo.json<br/>model_to_json"]
+
+    classDef processo fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef cuidado fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef saida fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class Dados,Preparacao,Colunas,Treino processo
+    class Divisao,Avaliacao cuidado
+    class Exportacao saida

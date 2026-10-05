@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor Terminal as Terminal Windows
+    participant CSV as CSV de BTC-USD
+    participant Treino as Notebooks offline
+    participant Arquivo as models/modelo.json
+    participant API as Backend Docker :6767
+    participant Modelo as Prophet em memória
+
+    Note over CSV,Arquivo: 1. Treinamento offline
+    Treino->>CSV: Ler ds (data) e y (fechamento)
+    CSV-->>Treino: Histórico diário
+    Treino->>Treino: Comparar Prophet: 3 e aproximadamente 12 anos
+    Treino->>Treino: Escolher janela pela validação e avaliar no teste
+    Treino->>Treino: Reajustar Prophet de 3 anos até 04/10/2026
+    Treino->>Arquivo: Gravar model_to_json(modelo)
+    Treino->>Treino: Comparar ARIMA depois, experimento exploratório
+    Note right of Treino: Métricas em reports/<br/>ARIMA exportado separadamente em models/arima.json
+
+    Note over Arquivo,API: 2. Inicialização do backend
+    Note right of API: Rede Docker PonderadaComp<br/>127.0.0.1:6767 encaminha para container:6767
+    API->>Arquivo: Ler /app/models/modelo.json pelo volume somente leitura
+    Arquivo-->>API: Conteúdo do artefato
+    API->>Modelo: model_from_json(conteúdo), uma vez
+    Modelo-->>API: Instância Prophet carregada
+    API->>Modelo: predict(primeiro dia permitido), verificar prontidão
+    Modelo-->>API: Previsão finita
+    API->>API: Abrir HTTP em 0.0.0.0:6767
+    Note over Arquivo,API: Artefato ausente ou inválido interrompe a inicialização (saída 1)
+
+    Note over Terminal,API: 3. Consultas em http://127.0.0.1:6767
+    Terminal->>API: GET /health
+    API-->>Terminal: 200 OK: modelo pronto, intervalo permitido e hash
+    Note over Terminal,API: Datas aceitas pelo artefato atual: 2026-10-05 a 2026-10-11
+    Terminal->>Terminal: Usar data informada ou forecast_start de /health
+    Terminal->>API: POST /predict {"ds":"2026-10-05"}
+    API->>API: Validar JSON, campo ds, calendário e horizonte de 7 dias
+    alt Entrada válida
+        API->>Modelo: predict(DataFrame com ds)
+        Modelo-->>API: yhat=78248.948192546 para 2026-10-05
+        API-->>Terminal: 200 OK: ds, yhat, symbol, currency, model, trained_until e hash
+    else Entrada inválida
+        API-->>Terminal: 422: error.code=invalid_input e mensagem
+    end
+    Note over Terminal,API: JSON malformado: 400<br/>Content-Type incorreto: 415<br/>Corpo acima de 4096 bytes: 413

@@ -1,0 +1,21 @@
+{
+  "selected_window": "3y",
+  "orders_by_window": {
+    "3y": [
+      0,
+      1,
+      0
+    ],
+    "12y": [
+      0,
+      1,
+      0
+    ]
+  },
+  "validation_mae_usd": {
+    "3y": 6613.447916666667,
+    "12y": 6613.447916666667
+  },
+  "selected_at_utc": "2026-10-05T18:39:23.828536+00:00",
+  "criterion": "MAE de validação; empates conforme protocolo-arima.md"
+}

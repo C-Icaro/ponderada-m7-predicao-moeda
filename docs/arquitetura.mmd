@@ -1,0 +1,40 @@
+flowchart LR
+    subgraph Offline["Offline: treinamento e comparação"]
+        CSV[("CSVs BTC-USD: 3 e 12 anos<br/>ds: data UTC / y: fechamento USD")]
+        Prophet["Notebook Prophet<br/>Validação e teste cronológicos"]
+        ARIMA["Notebook ARIMA<br/>Validação/teste exploratórios"]
+        Reports["reports/: métricas e gráficos"]
+        ModeloARIMA["models/arima.json<br/>Experimento ARIMA offline"]
+
+        CSV --> Prophet
+        CSV --> ARIMA
+        Prophet --> Reports
+        ARIMA --> Reports
+        ARIMA --> ModeloARIMA
+    end
+
+    Modelo["models/modelo.json<br/>Prophet, janela de 3 anos<br/>Ajuste final até 04/10/2026"]
+    Volume["models/ no host<br/>Volume somente leitura"]
+
+    subgraph Docker["Container Docker: rede PonderadaComp"]
+        API["API Python + Prophet :6767<br/>Carrega modelo.json uma vez<br/>Horizonte: 7 dias após o treino"]
+    end
+
+    Terminal["Terminal Windows<br/>client/terminal.py<br/>curl ou Invoke-RestMethod"]
+
+    Prophet -->|"Ajuste final e model_to_json"| Modelo
+    Modelo --> Volume
+    Volume -->|"/app/models:ro e model_from_json"| API
+    Terminal -->|"HTTP: GET /health ou POST /predict com ds"| API
+    API -->|"JSON: saúde ou ds/yhat em USD"| Terminal
+
+    classDef treino fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef modelo fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef offline fill:#f3f4f6,stroke:#6b7280,color:#374151
+    classDef servico fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef cliente fill:#fef3c7,stroke:#d97706,color:#78350f
+    class Prophet,ARIMA treino
+    class Modelo,Volume modelo
+    class Reports,ModeloARIMA offline
+    class API servico
+    class Terminal cliente

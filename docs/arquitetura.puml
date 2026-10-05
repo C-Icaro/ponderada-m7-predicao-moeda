@@ -1,0 +1,36 @@
+@startuml
+title Arquitetura da solução: BTC-USD, comparação offline e inferência
+left to right direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+package "Offline: treinamento e comparação" {
+  artifact "CSVs BTC-USD: 3 e 12 anos\nds: data UTC / y: fechamento USD" as Csv <<dados>>
+  component "Notebook Prophet\nValidação e teste cronológicos" as ProphetTraining <<offline>>
+  component "Notebook ARIMA\nValidação/teste exploratórios" as ArimaTraining <<offline>>
+  artifact "reports/: métricas e gráficos" as Reports <<evidências>>
+  artifact "models/arima.json\nExperimento ARIMA offline" as ArimaModel <<artefato exportado>>
+
+  Csv --> ProphetTraining : lê CSV
+  Csv --> ArimaTraining : lê CSV
+  ProphetTraining --> Reports : registra resultados
+  ArimaTraining --> Reports : registra resultados
+  ArimaTraining --> ArimaModel : exporta JSON ARIMA
+}
+
+artifact "models/modelo.json\nProphet, janela de 3 anos\nAjuste final até 04/10/2026" as Model <<artefato servido>>
+folder "models/ no host" as ModelsVolume <<volume somente leitura>>
+
+node "Container: rede PonderadaComp" as InferenceContainer <<Docker>> {
+  component "API Python + Prophet\nCarrega modelo.json uma vez\nHorizonte: 7 dias após o treino" as Backend <<inferência>>
+}
+
+interface "HTTP/JSON :6767\nGET /health\nPOST /predict" as HttpApi
+component "Terminal Windows\nclient/terminal.py\ncurl ou Invoke-RestMethod" as Client <<cliente HTTP>>
+
+ProphetTraining --> Model : ajuste final\nmodel_to_json
+Model --> ModelsVolume : disponibiliza arquivo\nem models/
+ModelsVolume --> Backend : montagem /app/models:ro\nmodel_from_json
+Backend -- HttpApi : fornece
+Client ..> HttpApi : usa\nds na requisição\nsaúde ou ds/yhat em USD na resposta
+@enduml
