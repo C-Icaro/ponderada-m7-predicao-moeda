@@ -1,0 +1,7 @@
+-r requirements-training.txt
+statsmodels==0.15.0
+scipy==1.17.1
+patsy==1.0.3
+formulaic==1.2.2
+interface-meta==2.0.1
+wrapt==2.5.0

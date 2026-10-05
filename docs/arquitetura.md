@@ -1,8 +1,8 @@
 # Arquitetura simples
 
-A interface de uso será o **terminal**. A proposta tem um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker.
+A interface de uso é o **terminal**. A solução usa um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker. A porta é `6767` e a rede Docker tem nome `PonderadaComp`.
 
-O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Os [CSVs diários de BTC-USD](../data/README.md) foram coletados, o [notebook de comparação](../training/comparacao.ipynb) foi executado e os modelos JSON foram exportados. O serviço de inferência em Docker e suas chamadas HTTP permanecem como proposta.
+O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Os [CSVs diários de BTC-USD](../data/README.md) foram coletados, o [notebook de comparação](../training/comparacao.ipynb) foi executado e os modelos JSON foram exportados. O [backend](../backend/README.md) carrega Prophet uma vez; o [cliente terminal](../client/README.md) consulta saúde e previsão por HTTP.
 
 ## Arquitetura em Mermaid
 
@@ -67,16 +67,16 @@ A [comparação executada](../reports/comparacao.md) acrescenta uma validação 
 
 ## Como o modelo chega ao backend
 
-O notebook já gravou `models/modelo.json` com `prophet.serialize.model_to_json`. A pasta `models/` será montada no container com acesso somente leitura. O backend carregará esse arquivo ao iniciar com `model_from_json`, seguindo a [serialização oficial](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models). A recarga dos modelos já foi verificada no experimento local.
+O notebook grava `models/modelo.json` com `prophet.serialize.model_to_json`. A pasta `models/` é montada no container com acesso somente leitura. O backend carrega esse arquivo ao iniciar com `model_from_json`, seguindo a [serialização oficial](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models). Antes de abrir a porta, confere uma previsão do artefato carregado.
 
-O terminal fará as chamadas HTTP, usando `curl` ou `Invoke-RestMethod` no PowerShell:
+O terminal faz as chamadas HTTP usando `python client/terminal.py`, `curl` ou `Invoke-RestMethod` no PowerShell:
 
-| Operação proposta | O que demonstra |
+| Operação | O que demonstra |
 | --- | --- |
 | `GET /health` | Serviço disponível e modelo carregado |
 | `POST /predict` | Entrada enviada ao backend e predição recebida em JSON |
 
-O contrato proposto para `POST /predict` é receber a data `ds` e retornar `ds` e `yhat` em JSON. Validar o formato da data e o horizonte aceito. Os comandos reproduzíveis e as respostas reais serão registrados no devlog durante a implementação.
+`POST /predict` recebe somente `{"ds":"YYYY-MM-DD"}` e retorna `ds` e `yhat`, acompanhados de moeda, modelo, data final do treino e hash. Aceita os sete dias seguintes ao fim do treino. Com o artefato atual, de 05/10/2026 a 11/10/2026. Entradas inválidas retornam erro HTTP/JSON; o cliente pode usar `forecast_start` informado em `/health` para escolher automaticamente a primeira data.
 
 ## Sequência em Mermaid
 
@@ -84,7 +84,7 @@ Fonte editável: [sequencia.mmd](sequencia.mmd).
 
 [Exportação SVG](imagens/sequencia-mermaid.svg) · [Captura do navegador](imagens/sequencia-mermaid-editor.jpg).
 
-O diagrama mostra a ordem das interações na solução proposta. O notebook treina e exporta o modelo; o backend carrega uma instância Prophet em memória ao iniciar; o terminal consulta o serviço por HTTP. O arquivo JSON é o artefato persistido, e `predict` é executado pela instância carregada no backend.
+O diagrama mostra a ordem das interações na solução. O notebook treina e exporta o modelo; o backend carrega uma instância Prophet em memória ao iniciar; o terminal consulta o serviço por HTTP. O arquivo JSON é o artefato persistido, e `predict` é executado pela instância carregada no backend.
 
 ```mermaid
 sequenceDiagram
@@ -121,13 +121,13 @@ sequenceDiagram
     end
 ```
 
-Este fluxo representa o caminho com artefato válido. Se o arquivo estiver ausente ou inválido, a proposta é interromper a inicialização; `GET /health` só indica prontidão após o carregamento. O horizonte permitido ainda será definido. As respostas acima representam o contrato planejado, sem endpoint executado.
+Este fluxo representa o caminho com artefato válido. Arquivo ausente ou inválido interrompe a inicialização; `GET /health` só indica prontidão após o carregamento e uma previsão inicial válida. O horizonte de uso é sete dias. As previsões de 90 dias usadas na avaliação são um experimento separado desse limite operacional.
 
-## Aceite e decisões pendentes
+## Aceite e experimento adicional
 
-O aceite da implementação será: notebook executado, modelo exportado e carregado no container, verificação do serviço e uma predição solicitada pelo terminal. Registrar os comandos, a resposta e limitações no devlog. Verificar também o comportamento de entrada inválida e modelo ausente.
+O aceite exige notebook executado, modelo exportado e carregado no container, verificação do serviço e uma predição solicitada pelo terminal. Os comandos, respostas e limites ficam no [devlog](../DEVLOG.md) e no [backend](../backend/README.md), incluindo entradas inválidas e artefato ausente.
 
-Prophet foi adotado após a recomendação do professor relatada pelo autor. A comparação das janelas já foi executada, e três anos foram escolhidos pelo menor MAE da validação. O teste reservado usou previsões de 90 dias a partir de um corte fixo. O horizonte aceito pela futura API permanece aberto; configuração e métricas do experimento estão registradas no protocolo.
+Prophet foi adotado após a recomendação do professor relatada pelo autor. Três anos foram escolhidos pelo menor MAE da validação. O [ARIMA exploratório](../reports/arima.md) solicitado depois do teste gerou artefatos separados e não alterou essa escolha. ARIMA(0,1,0) venceu sua validação, mas equivale à referência do último fechamento. Configurações e métricas estão nos protocolos e relatórios.
 
 Referência técnica: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html).
 

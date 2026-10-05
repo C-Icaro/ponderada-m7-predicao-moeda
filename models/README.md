@@ -1,4 +1,4 @@
-# Artefatos Prophet
+# Artefatos dos modelos
 
 Três arquivos JSON foram gerados na execução de 05/10/2026. Eles usam `model_to_json` para exportar e `model_from_json` para carregar, seguindo a [documentação oficial do Prophet](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
 
@@ -32,4 +32,16 @@ Os JSONs continuam ignorados pelo Git, conforme o contrato existente. Reproduza-
 .venv\Scripts\python.exe training/train_compare.py
 ```
 
-Na arquitetura proposta, o backend Python carregará `models/modelo.json` por um volume Docker somente leitura, em `/app/models/modelo.json`. A entrada terá datas `ds` e a saída terá previsões `yhat` em USD por BTC. Essa integração ainda não foi implementada. O artefato não fornece intervalos de incerteza, pois `uncertainty_samples=0` neste experimento.
+O backend Python usa `models/modelo.json` por um volume Docker somente leitura, em `/app/models/modelo.json`. A entrada contém uma data `ds` e a saída contém `ds` e `yhat` em USD por BTC. Consulte a [execução do serviço](../backend/README.md). O artefato não fornece intervalos de incerteza, pois `uncertainty_samples=0` neste experimento.
+
+## ARIMA exploratório
+
+O [experimento adicional](../training/protocolo-arima.md) gerou `arima-3y.json`, `arima-12y.json` e `arima.json`, sem substituir o artefato Prophet. As ordens escolhidas na validação foram `(0,1,0)` nas duas janelas. Esse modelo equivale à referência do último fechamento conhecido e teve MAE de teste de USD 8.707,09 em ambas.
+
+Os JSONs contêm ordem, escala, preços do treino e parâmetros. `ARIMA.filter` reconstrói o estado; a diferença máxima nas previsões conferidas foi zero. O ajuste final `arima.json` usa os 1.096 preços até 04/10/2026, mede 21.887 bytes e tem SHA-256 `d15f1d09ec262b0988a6a553b7688aac2edce168835ca777258126ef6eb8a65d`. Não tem avaliação independente posterior. [Demais hashes e métricas](../reports/arima.json).
+
+Reprodução, depois do Prophet e da instalação dos [requisitos opcionais ARIMA](../requirements-arima.txt):
+
+```powershell
+.venv\Scripts\python.exe training/train_arima.py
+```

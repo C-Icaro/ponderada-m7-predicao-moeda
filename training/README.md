@@ -40,7 +40,7 @@ Neste computador, já havia NumPy, pandas e Matplotlib instalados. A preparaçã
 python -m venv --system-site-packages .venv
 .venv\Scripts\python.exe -m pip install --no-cache-dir --only-binary=:all: -r requirements-training.txt
 .venv\Scripts\python.exe training/train_compare.py
-.venv\Scripts\python.exe -m unittest discover -s training -p "test_*.py"
+.venv\Scripts\python.exe -m unittest discover -s training -p "test_train_compare.py"
 ```
 
 As versões usadas estão em [requirements-training.txt](../requirements-training.txt). Os testes verificam métricas, separação temporal, seleção e geração do relatório, sem ajustar modelos. O diretório `.venv` teve 68.455.566 bytes, aproximadamente 65,28 MiB, medidos neste ambiente com dependências compartilhadas. Esse tamanho não inclui os pacotes globais reaproveitados e pode ser diferente em outro computador. `.venv` não é versionado.
@@ -53,6 +53,20 @@ Os [modelos avaliados](../models/README.md), `modelo-3y.json` e `modelo-12y.json
 
 Os modelos usam a serialização JSON nativa do Prophet; exportar e recarregar preservou as previsões verificadas. Modelos e CSVs de previsões são gerados localmente e ignorados pelo Git. Código, notebook, procedência e relatórios permitem reproduzir a execução; hashes identificam os artefatos medidos.
 
-Foi usada uma única janela de validação e uma de teste. Não houve busca de hiperparâmetros depois de observar o teste; os intervalos de incerteza estão desabilitados. O resultado se refere à previsão em bloco de até 90 dias e não comprova comportamento em outros períodos. Backend, terminal de consulta e Docker continuam como próxima etapa da arquitetura.
+Foi usada uma única janela de validação e uma de teste. Não houve busca de hiperparâmetros depois de observar o teste; os intervalos de incerteza estão desabilitados. O resultado se refere à previsão em bloco de até 90 dias e não comprova comportamento em outros períodos. A integração de inferência é descrita em [backend](../backend/README.md).
+
+## Experimento exploratório ARIMA
+
+Após ver os resultados Prophet, o autor solicitou ARIMA. O [protocolo adicional](protocolo-arima.md) fixou quatro ordens sem drift e seus desempates antes dos ajustes. O [notebook executado](arima.ipynb) chama [train_arima.py](train_arima.py); ambos reutilizam datas, hashes, métricas e cortes do experimento anterior.
+
+```powershell
+.venv\Scripts\python.exe -m pip install --no-cache-dir --only-binary=:all: -r requirements-arima.txt
+.venv\Scripts\python.exe training/train_arima.py
+.venv\Scripts\python.exe -m unittest discover -s training -p "test_*.py"
+```
+
+Execute Prophet primeiro, pois ARIMA confere e reutiliza seus resultados e CSV de previsões. As dependências ARIMA são opcionais para o backend. Os oito candidatos de validação convergiram sem avisos; `(0,1,0)` venceu nas duas janelas. O empate favoreceu três anos. Seu MAE de teste, USD 8.707,09, é igual ao de repetir o último preço conhecido. Não houve ganho sobre essa referência. [Resultados, gráfico e limites](../reports/arima.md).
+
+A etapa é exploratória porque o teste já havia sido observado. ARIMA gera JSONs separados, reconstruídos pelos parâmetros e série de treino, com diferença zero nas previsões conferidas. O ajuste final não possui avaliação independente e não substitui o Prophet servido pelo backend.
 
 Referências oficiais: [Quick Start](https://facebook.github.io/prophet/docs/quick_start.html), [avaliação temporal](https://facebook.github.io/prophet/docs/diagnostics.html) e [serialização JSON](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).

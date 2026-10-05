@@ -1,0 +1,190 @@
+{
+  "verified_at_utc": "2026-10-05T18:44:18.892257+00:00",
+  "runtime": {
+    "location": "WSL Ubuntu-24.04",
+    "docker_engine": "29.7.2",
+    "docker_compose": "5.5.1",
+    "base_image": "python:3.12-slim, reused existing local image",
+    "base_digest": "sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+    "python": "3.12.14"
+  },
+  "source_sha256": {
+    "backend/app.py": "63943333ed89151b5b99b38df996f7e54b70a86771802b3a60e21893993f0b97",
+    "client/terminal.py": "1f6af701d9014e5efb997c6169a1b345cdbda99c30c02136f6c0ddd487ee629c",
+    "Dockerfile": "046c5e5925ddddca87f7b10f71972cba02f27189e67fae36611e942f27e0d72d",
+    "compose.yaml": "f5ce208bda2765d24aa46489ab33ab7b6c092630d108969fdd688256d7f6d585",
+    "requirements-backend.txt": "1ddaef8e562d4cae6d01051ed40a62c333c9109aa64732718dec20896d9decc4"
+  },
+  "image": {
+    "tag": "ponderadacomp-backend:local",
+    "id": "sha256:891e842e4ee2cc07204da596745cfe740c099df5d226e096c6dc09157489c621",
+    "inspect_size_bytes": 130063299,
+    "docker_image_ls_size": "571MB",
+    "user": "app"
+  },
+  "disk_free_c_bytes_after_verification": 2782134272,
+  "container": {
+    "name": "ponderadacomp-backend-1",
+    "health": "healthy",
+    "network": "PonderadaComp",
+    "published_address": "127.0.0.1:6767",
+    "model_mount_read_only": true,
+    "execution": "compose up in foreground"
+  },
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "model_loaded": true,
+      "model": "Prophet",
+      "symbol": "BTC-USD",
+      "currency": "USD",
+      "model_sha256": "8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1",
+      "trained_until": "2026-10-04",
+      "forecast_start": "2026-10-05",
+      "forecast_end": "2026-10-11",
+      "horizon_days": 7
+    }
+  },
+  "predictions": {
+    "2026-10-05": {
+      "status": 200,
+      "body": {
+        "ds": "2026-10-05",
+        "yhat": 78248.948192546,
+        "symbol": "BTC-USD",
+        "currency": "USD",
+        "model": "Prophet",
+        "trained_until": "2026-10-04",
+        "model_sha256": "8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1"
+      }
+    },
+    "2026-10-11": {
+      "status": 200,
+      "body": {
+        "ds": "2026-10-11",
+        "yhat": 76302.84140654602,
+        "symbol": "BTC-USD",
+        "currency": "USD",
+        "model": "Prophet",
+        "trained_until": "2026-10-04",
+        "model_sha256": "8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1"
+      }
+    }
+  },
+  "errors": {
+    "impossible_date": {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "invalid_input",
+          "message": "ds deve ser uma data válida no calendário."
+        }
+      }
+    },
+    "out_of_horizon": {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "invalid_input",
+          "message": "ds deve estar entre 2026-10-05 e 2026-10-11, os 7 dias seguintes ao fim do treino."
+        }
+      }
+    },
+    "in_training": {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "invalid_input",
+          "message": "ds deve estar entre 2026-10-05 e 2026-10-11, os 7 dias seguintes ao fim do treino."
+        }
+      }
+    },
+    "wrong_type": {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "invalid_input",
+          "message": "ds deve ser uma data no formato YYYY-MM-DD."
+        }
+      }
+    },
+    "extra_field": {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Envie somente um objeto JSON com o campo \"ds\"."
+        }
+      }
+    },
+    "malformed_json": {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invalid_json",
+          "message": "Envie um corpo JSON UTF-8 válido e completo."
+        }
+      }
+    },
+    "wrong_content_type": {
+      "status": 415,
+      "body": {
+        "error": {
+          "code": "unsupported_media_type",
+          "message": "Use Content-Type: application/json."
+        }
+      }
+    },
+    "too_large": {
+      "status": 413,
+      "body": {
+        "error": {
+          "code": "body_too_large",
+          "message": "O corpo deve ter até 4096 bytes."
+        }
+      }
+    }
+  },
+  "initialization_failures": {
+    "missing_model_exit_code": 1,
+    "missing_model_message": "Inicialização interrompida: Não foi possível carregar um modelo Prophet válido em /app/models/missing.json: [Errno 2] No such file or directory: '/app/models/missing.json'",
+    "corrupt_model_exit_code": 1,
+    "corrupt_model_message": "Inicialização interrompida: Não foi possível carregar um modelo Prophet válido em /app/models/modelo.json: 'seasonality_mode'"
+  },
+  "terminal_client": {
+    "command": "python client/terminal.py 2026-10-05",
+    "exit_code": 0,
+    "stdout": "{\n  \"health\": {\n    \"http_status\": 200,\n    \"body\": {\n      \"status\": \"ok\",\n      \"model_loaded\": true,\n      \"model\": \"Prophet\",\n      \"symbol\": \"BTC-USD\",\n      \"currency\": \"USD\",\n      \"model_sha256\": \"8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1\",\n      \"trained_until\": \"2026-10-04\",\n      \"forecast_start\": \"2026-10-05\",\n      \"forecast_end\": \"2026-10-11\",\n      \"horizon_days\": 7\n    }\n  }\n}\n{\n  \"prediction\": {\n    \"http_status\": 200,\n    \"body\": {\n      \"ds\": \"2026-10-05\",\n      \"yhat\": 78248.948192546,\n      \"symbol\": \"BTC-USD\",\n      \"currency\": \"USD\",\n      \"model\": \"Prophet\",\n      \"trained_until\": \"2026-10-04\",\n      \"model_sha256\": \"8fcd04e80bd236a8a879be335a19acc80830b47d0e030aae3044fc0421a716c1\"\n    }\n  }\n}\n"
+  },
+  "host_tests": {
+    "command": ".venv\\Scripts\\python.exe -m unittest discover -s backend -p \"test_*.py\"",
+    "count": 9,
+    "result": "passed"
+  },
+  "limits": [
+    "Academic local HTTP demonstration using Python standard library.",
+    "Prophet final refit artifact has no independent evaluation after 2026-10-04.",
+    "Seven-day API horizon differs from the earlier 90-day block evaluation.",
+    "Earlier detached WSL run ended with container exit 255; foreground invocation remained active during this verification."
+  ],
+  "independent_verification": {
+    "verified_at_utc": "2026-10-05T18:44:09.714444+00:00",
+    "container_health": "healthy",
+    "network": "PonderadaComp",
+    "port_binding": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "6767"
+      }
+    ],
+    "model_mount_read_only": true,
+    "backend_source_sha256": "63943333ed89151b5b99b38df996f7e54b70a86771802b3a60e21893993f0b97",
+    "container_source_hash_matches_host": true,
+    "invalid_dates_http_status": {
+      "2026-10-04": 422,
+      "2026-10-12": 422,
+      "2026-02-30": 422
+    }
+  }
+}

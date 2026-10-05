@@ -1,0 +1,8 @@
+# Mesmas versões da execução Prophet; HTTP e cliente usam biblioteca padrão.
+prophet==1.5.0
+cmdstanpy==1.3.0
+holidays==0.105
+stanio==0.5.1
+numpy==2.5.2
+pandas==3.0.5
+matplotlib==3.11.1

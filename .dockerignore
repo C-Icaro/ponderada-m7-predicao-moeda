@@ -1,0 +1,7 @@
+# Só o código de inferência e seus requisitos entram no contexto da imagem.
+**
+!Dockerfile
+!requirements-backend.txt
+!backend/
+backend/**
+!backend/app.py

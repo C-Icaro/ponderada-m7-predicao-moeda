@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: .
+    image: ponderadacomp-backend:local
+    ports:
+      - "127.0.0.1:6767:6767"
+    volumes:
+      - type: bind
+        source: ./models
+        target: /app/models
+        read_only: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:6767/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - ponderada
+
+networks:
+  ponderada:
+    name: PonderadaComp

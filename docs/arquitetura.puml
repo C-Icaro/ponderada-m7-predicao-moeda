@@ -1,5 +1,5 @@
 @startuml
-title Arquitetura inicial proposta: predição de moeda
+title Arquitetura da solução: predição de moeda
 left to right direction
 skinparam componentStyle uml2
 skinparam shadowing false
@@ -13,7 +13,7 @@ node "Container de inferência" as InferenceContainer <<Docker>> {
   component "Backend de inferência\nProphet" as Backend <<Python>>
 }
 
-interface "HTTP/JSON\nGET /health\nPOST /predict" as HttpApi
+interface "HTTP/JSON :6767\nGET /health\nPOST /predict" as HttpApi
 component "Terminal\ncurl ou Invoke-RestMethod" as Client <<cliente HTTP>>
 
 Csv --> Training : interface CSV\nlê dados históricos
@@ -24,7 +24,7 @@ Backend -- HttpApi : fornece
 Client ..> HttpApi : usa\nrequisição e resposta JSON
 
 note bottom of Training
-  Pipeline proposto:
+  Pipeline de treinamento:
   CSV pequeno -> divisão cronológica treino/teste
   -> treinamento -> avaliação no teste -> exportação.
   Colunas ds e y; um modelo Prophet.
@@ -32,12 +32,13 @@ note bottom of Training
 end note
 
 note bottom of ModelsVolume
-  Proposta de transferência do modelo.
+  Transferência do modelo por bind mount.
   models/modelo.json no host; backend apenas lê.
 end note
 
 note bottom of Client
-  Backend e interfaces HTTP ainda não implementados.
-  Dados BTC-USD e modelos exportados; horizonte da API aberto.
+  Cliente terminal e backend Python implementados.
+  Horizonte: sete dias após fim do treino.
+  Porta 6767; rede Docker PonderadaComp.
 end note
 @enduml
