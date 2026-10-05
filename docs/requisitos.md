@@ -18,11 +18,10 @@ O escopo mínimo é um notebook, um modelo simples, um artefato, um container de
 
 ## Decisões abertas
 
-- Moeda/par, fonte, frequência e período dos dados.
 - Horizonte de previsão e campos da entrada.
 - Configuração inicial do Prophet e métrica de avaliação.
 - Capacidade local para executar Docker, considerando o espaço livre.
 
 ## Aceite deste checkpoint
 
-Repositório privado criado, registro original e imagem preservados, estrutura inicial publicada e pendências explícitas. A arquitetura está em revisão. Nenhum notebook de treinamento, modelo exportado, backend ou container foi implementado ou executado.
+Repositório privado criado, registro original e imagem preservados, arquitetura simples documentada e coleta diária de BTC-USD do Yahoo Finance validada: três anos, 1.096 registros de 05/10/2023 a 04/10/2026, CSV local de 26.968 bytes. Script de obtenção e procedência registrados. Nenhum notebook de treinamento, modelo exportado, backend ou container foi implementado ou executado.
