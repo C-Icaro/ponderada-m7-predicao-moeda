@@ -8,10 +8,10 @@ Pré-requisitos: Git, Docker com Compose e acesso ao repositório. A primeira co
 
 ### 1. Clonar e entrar na pasta
 
-Enquanto a entrega está em revisão, use a branch abaixo, que contém os arquivos de execução:
+Clone a branch principal (`main`), que contém a entrega publicada:
 
 ```sh
-git clone --branch docs/arquitetura-inicial https://github.com/C-Icaro/ponderada-m7-predicao-moeda.git
+git clone https://github.com/C-Icaro/ponderada-m7-predicao-moeda.git
 cd ponderada-m7-predicao-moeda
 ```
 
@@ -24,6 +24,12 @@ wsl -d Ubuntu-24.04 --cd "$PWD"
 ```
 
 Siga os comandos Docker dentro do WSL e mantenha a sessão aberta enquanto a API estiver rodando. Com Docker Desktop disponível diretamente no PowerShell, essa etapa é dispensável.
+
+#### No macOS
+
+Instale e abra o [Docker Desktop para Mac](https://docs.docker.com/desktop/setup/install/mac-install/), escolhendo a versão para Intel ou Apple Silicon. Execute os blocos `sh` deste roteiro no Terminal do macOS. As instruções de WSL e os blocos PowerShell são específicos do Windows. O fluxo principal executa treinamento, backend e cliente em containers, sem exigir Python instalado no Mac.
+
+O digest da imagem base foi conferido e inclui variantes Linux `amd64` e `arm64`. As dependências fixadas também possuem pacotes binários compatíveis com Linux ARM64 e Python 3.12, incluindo [Prophet 1.5.0](https://pypi.org/project/prophet/1.5.0/#files). Essa verificação indica compatibilidade com Macs Intel e Apple Silicon; a execução real foi validada no Windows/WSL, sem teste em um Mac.
 
 ### 2. Construir a imagem e treinar
 
@@ -59,8 +65,16 @@ Para escolher uma data, acrescente-a ao final do comando do cliente, por exemplo
 
 Se já tiver Python instalado, também pode consultar a API pelo terminal do computador:
 
-```sh
+Windows (PowerShell):
+
+```powershell
 python client/terminal.py
+```
+
+macOS (Terminal):
+
+```sh
+python3 client/terminal.py
 ```
 
 ### 5. Encerrar
@@ -95,10 +109,20 @@ docker run --rm --user 0:0 --mount "type=bind,source=${PWD},target=/workspace" -
 
 O backend usa Prophet. Para reproduzir a comparação exploratória ARIMA, execute depois do treinamento Prophet, em um ambiente Python 3.13 local, versão usada nesse experimento:
 
+Windows (PowerShell):
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install --no-cache-dir --only-binary=:all: -r requirements-arima.txt
 .venv\Scripts\python.exe training/train_arima.py
+```
+
+macOS (Terminal, com Python 3.13 instalado):
+
+```sh
+python3.13 -m venv .venv
+.venv/bin/python -m pip install --no-cache-dir --only-binary=:all: -r requirements-arima.txt
+.venv/bin/python training/train_arima.py
 ```
 
 Esse script usa também os relatórios e CSVs de previsões gerados pelo Prophet. Gera `models/arima.json` separado; ele não substitui o modelo carregado pela API. Veja [training/README.md](training/README.md) para versões e testes.
