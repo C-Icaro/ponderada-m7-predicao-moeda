@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Segredos e arquivos locais
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Dados e modelos gerados
+data/raw/
+data/processed/
+models/*
+!models/README.md
+
+# Logs e saídas transitórias
+*.log
+outputs/
