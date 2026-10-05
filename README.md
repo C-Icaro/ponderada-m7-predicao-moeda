@@ -1,86 +1,115 @@
-# Ponderada M7: predição de moeda com Python e Docker
+# Ponderada M7: previsão de BTC-USD
 
-Repositório de Carlos Paiva para desenvolver a atividade ponderada de Computação, M7, EC 2026.
+Solução simples: dados CSV → treinamento Prophet → modelo JSON → API em Docker → cliente no terminal.
 
-**Estado atual:** notebooks Prophet e ARIMA executados, comparações registradas e artefatos JSON exportados. Backend Python e cliente terminal implementados, com Dockerfile e Compose na porta `6767` e rede `PonderadaComp`.
+## Executar do zero
 
-## Referência
+Pré-requisitos: Git, Docker com Compose e acesso ao repositório. A primeira construção da imagem usa internet para baixar a base Python e as dependências. Treinamento, API e cliente executam em containers, usando os dados incluídos no repo.
 
-[Enunciado do professor Murilo](https://github.com/Murilo-ZC/Atividade-Ponderada-M7-2026-EC), consultado em 05/10/2026, commit de referência `471310e2b792d5ab9759c4774300f4c4c3dd7777`.
+### 1. Clonar e entrar na pasta
 
-## Objetivo
+Enquanto a entrega está em revisão, use a branch abaixo, que contém os arquivos de execução:
 
-Construir uma demonstração que conecte dados históricos, treinamento, exportação do modelo, inferência em um backend Python conteinerizado e uma solicitação feita por um cliente.
-
-## Organização
-
-| Caminho | Finalidade |
-| --- | --- |
-| [DEVLOG.md](DEVLOG.md) | Registro do processo, decisões e evidências |
-| [docs/requisitos.md](docs/requisitos.md) | Escopo e critérios de aceite |
-| [docs/arquitetura.md](docs/arquitetura.md) | Arquitetura de componentes e interfaces propostas |
-| [docs/arquitetura.mmd](docs/arquitetura.mmd) e [docs/pipeline.mmd](docs/pipeline.mmd) | Nova versão editável em Mermaid |
-| [docs/sequencia.mmd](docs/sequencia.mmd) | Ordem das interações entre notebook, artefato, backend e terminal |
-| [docs/imagens/esboco-pipeline-original.png](docs/imagens/esboco-pipeline-original.png) | Esboço enviado pelo autor |
-| [data/README.md](data/README.md) | Obtenção, contrato, tamanho e procedência de BTC-USD |
-| [training/README.md](training/README.md) | Ambiente de treinamento e exportação |
-| [training/comparacao.ipynb](training/comparacao.ipynb) | Notebook executado com a comparação de três e 12 anos |
-| [training/train_compare.py](training/train_compare.py) | Implementação compartilhada pelo notebook e terminal |
-| [training/protocolo.md](training/protocolo.md) | Cortes e critérios definidos antes dos resultados |
-| [requirements-training.txt](requirements-training.txt) | Versões das dependências usadas |
-| [reports/comparacao.md](reports/comparacao.md) | Resultados medidos, gráfico e limites |
-| [training/arima.ipynb](training/arima.ipynb) e [reports/arima.md](reports/arima.md) | Experimento exploratório ARIMA e confronto com Prophet |
-| [models/README.md](models/README.md) | Artefatos do modelo |
-| [backend/README.md](backend/README.md) | Serviço de inferência em Python |
-| [client/README.md](client/README.md) | Cliente para demonstrar a predição |
-| [reports/integracao.json](reports/integracao.json) | Requisições reais, imagem Docker, rede, porta e hash do backend |
-
-## Primeira versão e comparação
-
-Os CSVs são separados: três anos (05/10/2023 a 04/10/2026, 1.096 registros, 26,3 KiB) e aproximadamente 12 anos (17/09/2014 a 04/10/2026, 4.401 registros, 113,6 KiB). Os preços nas datas comuns são idênticos. [Obtenção e procedência](data/README.md).
-
-O notebook usa a mesma configuração Prophet nas duas janelas. Escolhe pelo MAE da validação e avalia os mesmos 90 dias finais, de 07/07/2026 a 04/10/2026, sem usar esse teste para escolher a janela.
-
-| Versão | MAE no teste, USD por BTC |
-| --- | ---: |
-| Prophet com três anos | 16.347,51 |
-| Prophet com aproximadamente 12 anos | 28.836,89 |
-| Referência: repetir último fechamento conhecido | 8.707,09 |
-
-Três anos tiveram menor erro na validação e no teste. A janela longa teve MAE de teste 76,4% maior, mas a referência simples superou os dois Prophet. Esse resultado se limita à configuração e aos períodos avaliados. [Relatório completo](reports/comparacao.md).
-
-O ajuste final de três anos, com dados até 04/10/2026, gerou `models/modelo.json` usado pelo backend. Esse ajuste final ainda não possui avaliação independente. Para reproduzir o treinamento pelo terminal após a preparação descrita em [training](training/README.md):
-
-```powershell
-.\.venv\Scripts\python.exe training/train_compare.py
+```sh
+git clone --branch docs/arquitetura-inicial https://github.com/C-Icaro/ponderada-m7-predicao-moeda.git
+cd ponderada-m7-predicao-moeda
 ```
 
-## ARIMA exploratório
+Execute os próximos comandos na raiz dessa pasta, em um terminal com `docker` disponível.
 
-Depois de ver os resultados Prophet, foram comparadas quatro ordens ARIMA previamente fixadas, usando as mesmas datas. A validação escolheu `(0,1,0)` nas duas janelas e três anos pelo desempate. O MAE de teste foi USD 8.707,09, igual à referência de repetir o último fechamento conhecido. Esse resultado não demonstrou ganho sobre a referência simples. A etapa é exploratória, pois o teste já era conhecido. [Protocolo e reprodução](training/README.md#experimento-exploratório-arima).
+No Windows deste projeto, o Docker está no WSL `Ubuntu-24.04`. Para abrir esse terminal na pasta do repo, execute no PowerShell:
 
-## Executar o backend e consultar pelo terminal
+```powershell
+wsl -d Ubuntu-24.04 --cd "$PWD"
+```
 
-Após obter os dados e executar o treinamento Prophet, o arquivo `models/modelo.json` precisa existir. No terminal da raiz do projeto:
+Siga os comandos Docker dentro do WSL e mantenha a sessão aberta enquanto a API estiver rodando. Com Docker Desktop disponível diretamente no PowerShell, essa etapa é dispensável.
 
-```text
-docker compose up --build -d --wait
+### 2. Construir a imagem e treinar
+
+```sh
+docker compose build
+docker run --rm --user 0:0 --mount "type=bind,source=${PWD},target=/workspace" --workdir /workspace ponderadacomp-backend:local python training/train_compare.py
+```
+
+O primeiro comando usa o [Dockerfile](Dockerfile) e instala as versões de [requirements-backend.txt](requirements-backend.txt), iguais às do treinamento Prophet. O segundo executa [training/train_compare.py](training/train_compare.py) em um container temporário: compara três e 12 anos, gera os relatórios em `reports/` e salva **`models/modelo.json`**, que a API precisa carregar.
+
+A pasta do repo é montada no container, por isso os arquivos gerados permanecem no computador após ele terminar. `--user 0:0` permite gravar nessa pasta; a API executa como o usuário `app` definido no Dockerfile. Em Linux, os arquivos gerados pelo treinamento podem ficar com proprietário root. Os modelos gerados continuam fora do Git.
+
+### 3. Iniciar a API
+
+```sh
+docker compose up --no-build
+```
+
+Mantenha esse terminal aberto. O [compose.yaml](compose.yaml) inicia o backend, monta `models/` somente para leitura e disponibiliza a API em **http://127.0.0.1:6767**, na rede Docker **`PonderadaComp`**. O modelo é carregado ao iniciar o serviço; depois de treinar novamente, reinicie a API.
+
+### 4. Fazer uma previsão
+
+Abra outro terminal com Docker disponível, entre na mesma pasta do repo e execute:
+
+```sh
+docker compose ps
+docker run --rm --network PonderadaComp --mount "type=bind,source=${PWD},target=/workspace,readonly" --workdir /workspace ponderadacomp-backend:local python client/terminal.py --url http://backend:6767
+```
+
+Espere o backend aparecer como `healthy` no primeiro comando. O segundo executa [client/terminal.py](client/terminal.py), consulta `GET /health` e faz `POST /predict` para o primeiro dia aceito. O resultado esperado é HTTP `200` e um JSON com `ds` (data) e `yhat` (previsão em USD por BTC). Dentro da rede Docker, o endereço do serviço é `http://backend:6767`.
+
+Para escolher uma data, acrescente-a ao final do comando do cliente, por exemplo `2026-10-05`. Com os dados incluídos, a API aceita **2026-10-05 a 2026-10-11**, os sete dias após o fim do treino. Datas fora desse intervalo retornam HTTP `422`.
+
+Se já tiver Python instalado, também pode consultar a API pelo terminal do computador:
+
+```sh
 python client/terminal.py
+```
+
+### 5. Encerrar
+
+Use `Ctrl+C` no terminal da API e depois execute, na raiz do repo:
+
+```sh
 docker compose down
 ```
 
-O cliente consulta `http://127.0.0.1:6767/health` e usa a primeira data permitida para pedir uma previsão. Também pode receber uma data: `python client/terminal.py 2026-10-05`. A API aceita os sete dias seguintes ao fim do treino, atualmente 05/10/2026 a 11/10/2026. O volume do modelo é somente leitura; a rede se chama `PonderadaComp`. [Comandos PowerShell e Docker via WSL, respostas e verificações](backend/README.md).
+Esse comando remove os containers e a rede do projeto. Os CSVs e modelos permanecem na pasta do repo; a imagem Docker pode ser reutilizada.
 
-Neste computador, Docker está no WSL Ubuntu-24.04. Mantenha a execução no primeiro terminal e consulte pelo segundo terminal Windows:
+## Dados incluídos no repo
 
-```powershell
-wsl -d Ubuntu-24.04 --cd "$PWD" -- docker compose --project-name ponderadacomp up --build --pull never
+Os CSVs contêm **preços públicos de mercado de BTC-USD obtidos do [Yahoo Finance](https://finance.yahoo.com/quote/BTC-USD/history/)** e estão versionados para reproduzir o experimento sem uma nova coleta. Não contêm dados pessoais.
+
+| Arquivo | Período | Linhas | Tamanho |
+| --- | --- | ---: | ---: |
+| [data/processed/btc_usd_daily.csv](data/processed/btc_usd_daily.csv) | 2023-10-05 a 2026-10-04 | 1.096 | 26,3 KiB |
+| [data/processed/btc_usd_daily_12y.csv](data/processed/btc_usd_daily_12y.csv) | 2014-09-17 a 2026-10-04 | 4.401 | 113,6 KiB |
+
+As colunas são `ds` (data diária) e `y` (fechamento em USD por BTC). A [procedência](data/README.md) registra a fonte, os períodos e os hashes SHA-256. Preserve os arquivos e os metadados juntos: o treinamento confere os hashes antes de ajustar os modelos.
+
+Para repetir a coleta, opcionalmente, use a mesma imagem Docker. Estes comandos sobrescrevem os respectivos CSVs e metadados; dependem da internet e o Yahoo pode revisar preços históricos:
+
+```sh
+docker run --rm --user 0:0 --mount "type=bind,source=${PWD},target=/workspace" --workdir /workspace ponderadacomp-backend:local python data/download_btc.py
+docker run --rm --user 0:0 --mount "type=bind,source=${PWD},target=/workspace" --workdir /workspace ponderadacomp-backend:local python data/download_btc.py --start 2014-09-17 --end 2026-10-05 --output data/processed/btc_usd_daily_12y.csv --metadata data/coleta-btc-usd-12y.json
 ```
 
-O container foi verificado como saudável e respondeu ao cliente Windows com HTTP 200. A [evidência da integração](reports/integracao.json) confirma o volume somente leitura, rede, porta e correspondência do hash do código local com o código na imagem. A primeira previsão funcional foi `78248.948192546` USD para 05/10/2026, sem avaliação independente da precisão desse reajuste final.
+## ARIMA opcional
 
-Referências técnicas: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html) e [serialização oficial em JSON](https://facebook.github.io/prophet/docs/additional_topics.html#saving-models).
+O backend usa Prophet. Para reproduzir a comparação exploratória ARIMA, execute depois do treinamento Prophet, em um ambiente Python 3.13 local, versão usada nesse experimento:
 
-## Limitações
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install --no-cache-dir --only-binary=:all: -r requirements-arima.txt
+.venv\Scripts\python.exe training/train_arima.py
+```
 
-A comparação mede previsões de 90 dias feitas de uma vez, a partir de um corte fixo. Esse período é diferente do horizonte operacional de sete dias da API. Os CSVs e modelos gerados ficam fora do Git; código, notebooks executados, procedência e resultados permitem reproduzi-los. Os limites e a evidência de integração estão no [devlog](DEVLOG.md). As predições futuras são experimentais.
+Esse script usa também os relatórios e CSVs de previsões gerados pelo Prophet. Gera `models/arima.json` separado; ele não substitui o modelo carregado pela API. Veja [training/README.md](training/README.md) para versões e testes.
+
+## Resultados e documentação
+
+Os relatórios versionados registram a execução original no Windows com Python 3.13. O roteiro Docker usa Linux com Python 3.12 e gera seus próprios relatórios em `reports/`; os valores e hashes dos modelos podem diferir entre ambientes, mesmo com os mesmos CSVs.
+
+Na verificação deste roteiro em 05/10/2026, o clone limpo construiu a imagem, treinou Prophet, passou nos cinco testes de treinamento e retornou HTTP `200` pelo cliente. Os hashes dos CSVs foram preservados. O MAE do teste de 90 dias foi USD 16.867,51 (três anos) e USD 29.041,29 (12 anos); repetir o último fechamento teve menor erro, USD 8.707,09. Essa comparação não comprova precisão no horizonte de sete dias da API.
+
+- [Resultados Prophet](reports/comparacao.md) e [ARIMA](reports/arima.md).
+- [Contrato da API e evidência Docker](backend/README.md), [cliente](client/README.md) e [integração registrada](reports/integracao.json).
+- [Arquitetura](docs/arquitetura.md), [requisitos](docs/requisitos.md) e [devlog](DEVLOG.md).
+- [Enunciado da atividade](https://github.com/Murilo-ZC/Atividade-Ponderada-M7-2026-EC).

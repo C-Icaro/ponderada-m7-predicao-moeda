@@ -15,7 +15,9 @@ Thumbs.db
 
 # Dados e modelos gerados
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/btc_usd_daily.csv
+!data/processed/btc_usd_daily_12y.csv
 models/*
 !models/README.md
 

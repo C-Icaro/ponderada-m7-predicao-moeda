@@ -95,7 +95,7 @@ def main():
                     "y": "Close não ajustado, USD por BTC"},
         "validation": {"complete_daily_range": True, "duplicate_dates": 0,
                        "missing_dates": 0, "invalid_closes": 0},
-        "redistribution": "CSV local ignorado pelo Git; repositório contém obtenção e procedência.",
+        "redistribution": "Preços públicos do Yahoo Finance; os dois CSVs do experimento estão versionados com sua procedência.",
     }
     metadata.parent.mkdir(parents=True, exist_ok=True)
     metadata.write_text(

@@ -1,5 +1,7 @@
 # Dados
 
+Os dois CSVs de BTC-USD em `data/processed/` estão versionados no repositório. São preços públicos de mercado obtidos do Yahoo Finance, sem dados pessoais. Para reproduzir o treinamento, use os arquivos incluídos no clone; uma nova coleta é opcional. O [roteiro principal](../README.md) executa treinamento, API e cliente em Docker.
+
 ## Recortes obtidos em 05/10/2026
 
 | Campo | Valor observado |
@@ -10,7 +12,7 @@
 | Colunas | `ds`: data YYYY-MM-DD sem timezone; `y`: `Close` numérico, não ajustado |
 | Validação | Série diária completa, sem duplicatas, lacunas ou fechamentos inválidos |
 
-| Recorte | Período incluído | Registros | Tamanho medido | CSV local | Procedência |
+| Recorte | Período incluído | Registros | Tamanho medido | CSV versionado | Procedência |
 | --- | --- | ---: | ---: | --- | --- |
 | Primeira versão, três anos | 05/10/2023 a 04/10/2026 | 1.096 | 26.968 bytes, 26,3 KiB | `data/processed/btc_usd_daily.csv` | [Metadados de três anos](coleta-btc-usd.json) |
 | Comparação, histórico disponível de aproximadamente 12 anos | 17/09/2014 a 04/10/2026 | 4.401 | 116.370 bytes, 113,6 KiB | `data/processed/btc_usd_daily_12y.csv` | [Metadados de 12 anos](coleta-btc-usd-12y.json) |
@@ -55,6 +57,6 @@ Quando o ambiente de treinamento for preparado, também é possível usar `yfina
 
 A inspeção encontrou aproximadamente 2,81 GiB livres em C: durante a coleta. Depois da instalação e do treinamento, a pasta `.venv` tinha aproximadamente 65,3 MiB de arquivos e havia cerca de 2,72 GiB livres em C:. Esse ambiente reutiliza pandas, NumPy e Matplotlib já instalados por meio de `--system-site-packages`; uma instalação independente poderá ocupar mais espaço. O consumo de imagens Docker ainda precisa ser medido.
 
-Os arquivos em `data/raw/` e `data/processed/` continuam fora do Git. O repositório publica o script e a procedência para reproduzir a obtenção. A licença de redistribuição dos preços não foi confirmada neste checkpoint; a [documentação do yfinance](https://ranaroussi.github.io/yfinance/) orienta consultar as condições do Yahoo e descreve uso pessoal da API. A obtenção depende da internet e da disponibilidade da fonte.
+O repositório inclui os dois CSVs descritos acima, o script de coleta e os metadados de procedência. Outros arquivos em `data/raw/` e `data/processed/` continuam ignorados pelo Git. Uma nova coleta depende da internet e da disponibilidade do Yahoo; pode substituir os CSVs e seus metadados. Preserve a cópia versionada para reproduzir exatamente os dados deste experimento.
 
 O autor pediu pelo menos três anos, e o recorte foi ampliado após a primeira coleta de dois anos. Depois, pediu confrontar a primeira versão com o histórico de 12 anos. A comparação foi executada com uma validação anterior ao teste: 08/04/2026 a 06/07/2026. No teste final reservado, de 07/07/2026 a 04/10/2026, os ajustes usam 1.006 observações de treino no recorte de três anos e 4.311 no longo. [Resultados medidos](../reports/comparacao.md). Ter mais observações, por si só, não demonstra precisão preditiva.

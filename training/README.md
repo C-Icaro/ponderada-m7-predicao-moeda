@@ -25,14 +25,14 @@ Três anos tiveram menor erro que o histórico longo neste recorte. A referênci
 
 ## Reprodução pelo terminal
 
-Na raiz do repositório, obtenha os dois CSVs em destinos separados:
+Os dois CSVs já estão incluídos no repositório. Para executar tudo em containers, siga o [roteiro Docker](../README.md#executar-do-zero). Se quiser repetir a coleta pelo Python local, execute os comandos abaixo na raiz do repo, em destinos separados:
 
 ```powershell
 python data/download_btc.py --start 2023-10-05 --end 2026-10-05
 python data/download_btc.py --start 2014-09-17 --end 2026-10-05 --output data/processed/btc_usd_daily_12y.csv --metadata data/coleta-btc-usd-12y.json
 ```
 
-Os CSVs locais ficam fora do Git. A [procedência dos dados](../data/README.md) documenta a fonte, os tamanhos e os hashes. Uma nova coleta pode receber revisões da fonte; nesse caso, resultados antigos não comprovam a avaliação dos novos preços.
+Os CSVs contêm preços públicos do Yahoo Finance e estão versionados. A [procedência dos dados](../data/README.md) documenta a fonte, os tamanhos e os hashes. Uma nova coleta pode receber revisões da fonte; nesse caso, resultados antigos não comprovam a avaliação dos novos preços.
 
 Neste computador, já havia NumPy, pandas e Matplotlib instalados. A preparação abaixo reutiliza esses pacotes para economizar espaço, mantendo os requisitos explícitos:
 
