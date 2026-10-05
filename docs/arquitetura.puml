@@ -1,0 +1,43 @@
+@startuml
+title Arquitetura inicial proposta: predição de moeda
+left to right direction
+skinparam componentStyle uml2
+skinparam shadowing false
+
+artifact "CSV histórico pequeno" as Csv <<dados>>
+component "Treinamento de um modelo simples" as Training <<notebook>>
+artifact "modelo.joblib\nTransformações necessárias, se usadas" as Model <<artefato exportado>>
+folder "models/ no host" as ModelsVolume <<volume somente leitura>>
+
+node "Container de inferência" as InferenceContainer <<Docker>> {
+  component "Backend de inferência" as Backend <<Python>>
+}
+
+interface "HTTP/JSON\nGET /health\nPOST /predict" as HttpApi
+component "Terminal\ncurl ou Invoke-RestMethod" as Client <<cliente HTTP>>
+
+Csv --> Training : interface CSV\nlê dados históricos
+Training --> Model : interface de exportação\nserializa modelo e transformações usadas
+Model --> ModelsVolume : disponibiliza arquivo\nem models/
+ModelsVolume --> Backend : interface de arquivos\nmontagem /app/models:ro\ncarrega o artefato
+Backend -- HttpApi : fornece
+Client ..> HttpApi : usa\nrequisição e resposta JSON
+
+note bottom of Training
+  Pipeline proposto:
+  CSV pequeno -> divisão cronológica treino/teste
+  -> treinamento -> avaliação no teste -> exportação.
+  Transformações, se usadas, ajustadas somente no treino.
+  Um notebook e um modelo simples, sem embaralhar a série.
+end note
+
+note bottom of ModelsVolume
+  Proposta de transferência do modelo.
+  models/modelo.joblib no host; backend apenas lê.
+end note
+
+note bottom of Client
+  Interfaces e componentes ainda não implementados.
+  Moeda, dados, horizonte e modelo permanecem abertos.
+end note
+@enduml

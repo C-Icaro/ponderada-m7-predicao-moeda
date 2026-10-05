@@ -1,0 +1,25 @@
+flowchart LR
+    CSV[("CSV histórico<br/>Data e fechamento")]
+    Treino["Notebook Python<br/>Treinar e avaliar um modelo simples"]
+    Modelo["Artefato exportado<br/>models/modelo.joblib"]
+
+    subgraph Docker["Container Docker"]
+        API["Backend Python<br/>Carregar modelo e fazer predições"]
+    end
+
+    Terminal["Terminal<br/>curl ou Invoke-RestMethod"]
+
+    CSV -->|Lê os dados| Treino
+    Treino -->|Exporta| Modelo
+    Modelo -->|Volume somente leitura| API
+    Terminal -->|"GET /health ou POST /predict"| API
+    API -->|"Status ou predição em JSON"| Terminal
+
+    classDef treino fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef modelo fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef servico fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef cliente fill:#fef3c7,stroke:#d97706,color:#78350f
+    class Treino treino
+    class Modelo modelo
+    class API servico
+    class Terminal cliente

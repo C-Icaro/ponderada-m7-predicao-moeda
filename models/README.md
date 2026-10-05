@@ -1,7 +1,7 @@
 # Artefatos
 
-Reservado para o modelo exportado. Nenhum artefato existe neste checkpoint.
+Reservado para `models/modelo.joblib`, a ser gerado pelo notebook. Nenhum artefato existe neste checkpoint.
 
-A futura exportação deve registrar versão, contrato de entrada, horizonte previsto, bibliotecas, métricas e referência aos dados usados. Quando o artefato não for versionado, documentar sua regeneração.
+A proposta é salvar um modelo simples com as transformações necessárias à inferência, se usadas. O backend Python lerá esse arquivo por um volume Docker somente leitura, em `/app/models/modelo.joblib`.
 
-Arquivos de modelos ficam ignorados por padrão para evitar binários ou volumes desnecessários.
+Registrar campos e unidades da entrada, horizonte, dependências e referência aos dados. Arquivos de modelos ficam ignorados por padrão; documentar no notebook como gerar novamente o artefato.

@@ -1,0 +1,14 @@
+flowchart LR
+    Dados["Receber o CSV"] --> Preparacao["Explorar e limpar<br/>Ordenar por data"]
+    Preparacao --> Features["Definir entradas<br/>Sem usar dados futuros"]
+    Features --> Divisao["Separar treino e teste<br/>Em ordem cronológica"]
+    Divisao --> Treino["Treinar um modelo simples"]
+    Treino --> Avaliacao["Avaliar no teste reservado"]
+    Avaliacao --> Exportacao["Exportar modelo.joblib<br/>Com transformações, se usadas"]
+
+    classDef processo fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef cuidado fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef saida fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class Dados,Preparacao,Features,Treino processo
+    class Divisao,Avaliacao cuidado
+    class Exportacao saida

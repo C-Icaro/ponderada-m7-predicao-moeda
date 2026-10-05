@@ -1,7 +1,7 @@
 # Treinamento
 
-Reservado para notebook ou código Python de treinamento. Ainda não implementado.
+Reservado para um notebook de treinamento. Ainda não implementado.
 
-O treinamento deve ordenar a série no tempo, separar treino e teste cronologicamente, comparar com um baseline e exportar o modelo junto das transformações necessárias à inferência.
+Proposta mínima: ler um CSV pequeno, ordenar a série, separar treino e teste cronologicamente, treinar um modelo simples e avaliar no teste. Transformações que aprendem parâmetros, se usadas, devem ser ajustadas somente no treino.
 
-Registrar o horizonte previsto, colunas, unidades, dependências e comando de reprodução quando a implementação existir.
+Exportar para `models/modelo.joblib` o modelo e as transformações necessárias à inferência, se usadas. Registrar fonte dos dados, horizonte, campos e unidades da entrada, dependências e instruções para executar novamente o notebook.

@@ -1,7 +1,7 @@
 # Cliente
 
-Reservado para uma demonstração simples de solicitação ao backend.
+O cliente proposto é o próprio terminal, usando `curl` ou `Invoke-RestMethod` para fazer solicitações HTTP ao backend.
 
-O cliente pode ser um script Python, comando HTTP ou interface mínima. A escolha permanece aberta.
+Usar as interfaces propostas `GET /health` para verificar disponibilidade e `POST /predict` para solicitar uma predição. Nenhum endpoint foi implementado ou testado neste checkpoint.
 
 Registrar a requisição efetivamente executada, a resposta e as condições de erro verificadas.

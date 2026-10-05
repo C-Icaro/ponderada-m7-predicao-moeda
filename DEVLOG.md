@@ -29,3 +29,30 @@ A identificação da ferramenta acima é o registro informado pelo autor.
 ### Próxima etapa
 
 Revisar a arquitetura de componentes e definir um recorte pequeno de dados antes de implementar o treinamento.
+
+### Revisão proposta da arquitetura com IA
+
+- O esboço original foi preservado como pipeline de construção do modelo. A [arquitetura de componentes proposta](docs/arquitetura.md), com [fonte UML](docs/arquitetura.puml), complementa esse registro.
+- A proposta conecta CSV, ambiente de treinamento, artefato com modelo e transformações, volume `models/` somente leitura, backend Python em Docker e cliente HTTP. `GET /health` e `POST /predict` são interfaces propostas.
+- O pipeline detalhado inclui divisão cronológica, validação para seleção e teste final reservado. Transformações que aprendem parâmetros serão ajustadas somente no treino.
+- Moeda, fonte, horizonte, formato do artefato, modelo e implementação continuam abertos. Esta revisão não representa treinamento executado nem predição demonstrada.
+
+### Nova versão em Mermaid, solicitada pelo autor
+
+- O formato visual foi alterado para Mermaid após o pedido de edição no Excalidraw.
+- Foram criados dois diagramas: arquitetura da solução e pipeline detalhado de ML. O esboço original permanece preservado.
+- A revisão acrescenta exportação do artefato, montagem em volume somente leitura, backend, cliente e troca HTTP/JSON.
+- No pipeline, a revisão explicita divisão cronológica, validação, teste final reservado e exportação das transformações.
+
+### Simplificação solicitada pelo autor
+
+- A interface de uso será o terminal, com `curl` ou `Invoke-RestMethod`.
+- A proposta atual usa um CSV pequeno, um notebook, um modelo exportado e um container de backend Python.
+- A divisão inicial será treino/teste cronológica. A comparação entre vários modelos e a validação adicional da proposta anterior ficam como extensões opcionais.
+- A versão Mermaid foi ajustada a esse escopo. A revisão acima permanece como registro da evolução, e a [arquitetura atual](docs/arquitetura.md) descreve a proposta vigente.
+
+### Validação da documentação
+
+- Os dois diagramas Mermaid foram renderizados no Mermaid Live no navegador. Essa verificação confirma a sintaxe e a apresentação dos diagramas, não a execução da solução.
+- Exportações SVG e capturas do editor foram preservadas em `docs/imagens/`.
+- [Captura da arquitetura](docs/imagens/arquitetura-mermaid-editor.jpg) e [captura do pipeline](docs/imagens/pipeline-mermaid-editor.jpg).

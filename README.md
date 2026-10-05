@@ -18,6 +18,8 @@ Construir uma demonstração que conecte dados históricos, treinamento, exporta
 | --- | --- |
 | [DEVLOG.md](DEVLOG.md) | Registro do processo, decisões e evidências |
 | [docs/requisitos.md](docs/requisitos.md) | Escopo e critérios de aceite |
+| [docs/arquitetura.md](docs/arquitetura.md) | Arquitetura de componentes e interfaces propostas |
+| [docs/arquitetura.mmd](docs/arquitetura.mmd) e [docs/pipeline.mmd](docs/pipeline.mmd) | Nova versão editável em Mermaid |
 | [docs/imagens/esboco-pipeline-original.png](docs/imagens/esboco-pipeline-original.png) | Esboço enviado pelo autor |
 | [data/README.md](data/README.md) | Contrato e procedência dos dados, a definir |
 | [training/README.md](training/README.md) | Ambiente de treinamento e exportação |
@@ -27,7 +29,7 @@ Construir uma demonstração que conecte dados históricos, treinamento, exporta
 
 ## Próxima decisão
 
-Definir moeda/par, fonte, frequência, período e horizonte previsto. A escolha ainda está aberta. O desenvolvimento será registrado no devlog, com comandos e resultados efetivamente observados.
+Definir moeda/par, fonte, frequência, período e horizonte previsto. A escolha ainda está aberta. A solução será simples: treinamento em notebook, backend Python em um container Docker e uso pelo terminal (`curl` ou `Invoke-RestMethod`). O desenvolvimento será registrado no devlog, com comandos e resultados efetivamente observados.
 
 ## Limitações
 
