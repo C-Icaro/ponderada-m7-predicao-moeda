@@ -2,7 +2,7 @@
 
 A interface de uso será o **terminal**. A proposta tem um CSV pequeno, um notebook com Prophet, um modelo exportado em JSON e um backend Python em um único container Docker.
 
-O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Esta versão em Mermaid acrescenta os componentes necessários à demonstração. Tudo abaixo é uma proposta; os componentes ainda não foram implementados.
+O [esboço original](imagens/esboco-pipeline-original.png) permanece preservado. Esta versão em Mermaid acrescenta os componentes necessários à demonstração. O [CSV diário de BTC-USD](../data/README.md) já foi coletado; treinamento, modelo exportado e serviço de inferência permanecem como proposta.
 
 ## Arquitetura em Mermaid
 
@@ -76,12 +76,57 @@ O terminal fará as chamadas HTTP, usando `curl` ou `Invoke-RestMethod` no Power
 
 O contrato proposto para `POST /predict` é receber a data `ds` e retornar `ds` e `yhat` em JSON. Validar o formato da data e o horizonte aceito. Os comandos reproduzíveis e as respostas reais serão registrados no devlog durante a implementação.
 
+## Sequência em Mermaid
+
+Fonte editável: [sequencia.mmd](sequencia.mmd).
+
+[Exportação SVG](imagens/sequencia-mermaid.svg) · [Captura do navegador](imagens/sequencia-mermaid-editor.jpg).
+
+O diagrama mostra a ordem das interações na solução proposta. O notebook treina e exporta o modelo; o backend carrega uma instância Prophet em memória ao iniciar; o terminal consulta o serviço por HTTP. O arquivo JSON é o artefato persistido, e `predict` é executado pela instância carregada no backend.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Terminal as Terminal (curl / PowerShell)
+    participant CSV as CSV de BTC-USD
+    participant Treino as Notebook com Prophet
+    participant Arquivo as models/modelo.json
+    participant API as Backend Python em Docker
+
+    Note over CSV,Arquivo: 1. Treinamento offline
+    Treino->>CSV: Ler ds (data) e y (fechamento)
+    CSV-->>Treino: Histórico diário
+    Treino->>Treino: Separar treino e teste cronologicamente
+    Treino->>Treino: fit(treino)
+    Treino->>Treino: predict(datas do teste) e avaliar
+    Treino->>Arquivo: Gravar model_to_json(modelo)
+
+    Note over Arquivo,API: 2. Inicialização do backend
+    API->>Arquivo: Ler JSON pelo volume somente leitura
+    Arquivo-->>API: Conteúdo do artefato
+    API->>API: model_from_json, carregar modelo em memória
+
+    Note over Terminal,API: 3. Consulta pelo terminal
+    Terminal->>API: GET /health
+    API-->>Terminal: 200 OK, serviço pronto e modelo carregado
+    Terminal->>API: POST /predict {"ds":"2026-10-05"}
+    API->>API: Validar formato de ds e horizonte aceito
+    alt Entrada válida
+        API->>API: modelo.predict(DataFrame com ds)
+        API-->>Terminal: 200 OK, JSON com ds e yhat
+    else Entrada inválida
+        API-->>Terminal: 4xx, JSON com erro de validação
+    end
+```
+
+Este fluxo representa o caminho com artefato válido. Se o arquivo estiver ausente ou inválido, a proposta é interromper a inicialização; `GET /health` só indica prontidão após o carregamento. O horizonte permitido ainda será definido. As respostas acima representam o contrato planejado, sem endpoint executado.
+
 ## Aceite e decisões pendentes
 
 O aceite da implementação será: notebook executado, modelo exportado e carregado no container, verificação do serviço e uma predição solicitada pelo terminal. Registrar os comandos, a resposta e limitações no devlog. Verificar também o comportamento de entrada inválida e modelo ausente.
 
-Prophet foi adotado na proposta após a recomendação do professor relatada pelo autor. Moeda/par, fonte, período, frequência e horizonte de previsão permanecem abertos. A divisão inicial usa apenas treino e teste. Comparar vários modelos é uma extensão opcional.
+Prophet foi adotado na proposta após a recomendação do professor relatada pelo autor. O recorte atual usa três anos de BTC-USD diário do Yahoo Finance. Horizonte de previsão, configuração e métrica permanecem abertos. A divisão inicial usa apenas treino e teste. Comparar vários modelos ou janelas de histórico é uma extensão opcional.
 
 Referência técnica: [Quick Start do Prophet](https://facebook.github.io/prophet/docs/quick_start.html).
 
-Referências: [enunciado](https://github.com/Murilo-ZC/Atividade-Ponderada-M7-2026-EC), [requisitos](requisitos.md) e [UML complementar em PlantUML](arquitetura.puml). O Mermaid é uma visão de fluxo entre componentes; a fonte PlantUML mantém a notação UML solicitada no enunciado.
+Referências: [enunciado](https://github.com/Murilo-ZC/Atividade-Ponderada-M7-2026-EC), [requisitos](requisitos.md) e [UML complementar em PlantUML](arquitetura.puml). O Mermaid reúne arquitetura, pipeline e sequência de mensagens; a fonte PlantUML mantém a visão UML de componentes solicitada no enunciado.

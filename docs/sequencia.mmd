@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor Terminal as Terminal (curl / PowerShell)
+    participant CSV as CSV de BTC-USD
+    participant Treino as Notebook com Prophet
+    participant Arquivo as models/modelo.json
+    participant API as Backend Python em Docker
+
+    Note over CSV,Arquivo: 1. Treinamento offline
+    Treino->>CSV: Ler ds (data) e y (fechamento)
+    CSV-->>Treino: Histórico diário
+    Treino->>Treino: Separar treino e teste cronologicamente
+    Treino->>Treino: fit(treino)
+    Treino->>Treino: predict(datas do teste) e avaliar
+    Treino->>Arquivo: Gravar model_to_json(modelo)
+
+    Note over Arquivo,API: 2. Inicialização do backend
+    API->>Arquivo: Ler JSON pelo volume somente leitura
+    Arquivo-->>API: Conteúdo do artefato
+    API->>API: model_from_json, carregar modelo em memória
+
+    Note over Terminal,API: 3. Consulta pelo terminal
+    Terminal->>API: GET /health
+    API-->>Terminal: 200 OK, serviço pronto e modelo carregado
+    Terminal->>API: POST /predict {"ds":"2026-10-05"}
+    API->>API: Validar formato de ds e horizonte aceito
+    alt Entrada válida
+        API->>API: modelo.predict(DataFrame com ds)
+        API-->>Terminal: 200 OK, JSON com ds e yhat
+    else Entrada inválida
+        API-->>Terminal: 4xx, JSON com erro de validação
+    end

@@ -20,6 +20,7 @@ Construir uma demonstração que conecte dados históricos, treinamento, exporta
 | [docs/requisitos.md](docs/requisitos.md) | Escopo e critérios de aceite |
 | [docs/arquitetura.md](docs/arquitetura.md) | Arquitetura de componentes e interfaces propostas |
 | [docs/arquitetura.mmd](docs/arquitetura.mmd) e [docs/pipeline.mmd](docs/pipeline.mmd) | Nova versão editável em Mermaid |
+| [docs/sequencia.mmd](docs/sequencia.mmd) | Ordem das interações entre notebook, artefato, backend e terminal |
 | [docs/imagens/esboco-pipeline-original.png](docs/imagens/esboco-pipeline-original.png) | Esboço enviado pelo autor |
 | [data/README.md](data/README.md) | Obtenção, contrato, tamanho e procedência de BTC-USD |
 | [training/README.md](training/README.md) | Ambiente de treinamento e exportação |

@@ -80,3 +80,11 @@ Revisar a arquitetura de componentes e definir um recorte pequeno de dados antes
 - O CSV atual mede 26.968 bytes, aproximadamente 26,3 KiB. Permanece com apenas `ds` e `y`, sem incluir o dia em andamento. Script, procedência e documentação foram atualizados para esse intervalo.
 - A série atual foi validada novamente quanto a datas consecutivas, ausência de duplicatas/lacunas, fechamentos finitos e positivos, leitura pelo pandas, tamanho e hash. O teste proposto mantém os últimos 90 dias; o treino passa a ter 1.006 registros.
 - A coleta de dois anos acima é o registro da etapa anterior. Nenhum modelo foi treinado nesta ampliação.
+
+### Diagrama de sequência Mermaid, solicitado pelo autor
+
+- A [fonte editável](docs/sequencia.mmd) detalha a arquitetura vigente em três etapas: treinamento offline no notebook, inicialização do backend com o modelo exportado e consulta HTTP pelo terminal.
+- O notebook ajusta Prophet somente no treino, prevê nas datas do teste, avalia e exporta `models/modelo.json`. O backend lê o artefato por volume somente leitura e usa `model_from_json` para criar a instância em memória.
+- A sequência inclui `GET /health`, `POST /predict` com `ds`, resposta com `ds`/`yhat` e erro de validação para entrada inválida. Artefato ausente ou inválido deve impedir a inicialização; horizonte de previsão permanece pendente.
+- O diagrama foi renderizado no Mermaid Live, com [SVG](docs/imagens/sequencia-mermaid.svg) e [captura do editor](docs/imagens/sequencia-mermaid-editor.jpg) preservados. A fonte Mermaid coincide com o bloco da documentação. Essa verificação confirma o diagrama proposto, sem execução de treinamento ou endpoints.
+- A documentação da arquitetura foi atualizada para refletir o recorte já coletado de três anos de BTC-USD. A versão anterior que deixava a fonte de dados em aberto permanece no histórico Git.
